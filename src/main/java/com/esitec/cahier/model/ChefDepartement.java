@@ -1,5 +1,12 @@
 package com.esitec.cahier.model;
 
+
+/*
+by Aliou barry
+Chef de département : responsable de la gestion d'un département spécifique (ex: Mathématiques, Physique, etc.). Il supervise les enseignants du département, gère les emplois du temps et s'assure que les programmes sont respectés.
+
+
+*/
 public class ChefDepartement extends Utilisateur {
 
     // Attribut spécifique au chef
