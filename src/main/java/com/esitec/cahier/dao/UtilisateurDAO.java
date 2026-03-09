@@ -180,4 +180,9 @@ public class UtilisateurDAO {
 
         return u;
     }
+
+    // Méthode alias pour compatibilité binôme
+    public Utilisateur trouverParEmailEtMotDePasse(String email, String motDePasse) throws DatabaseException {
+        return findByEmailAndPassword(email, motDePasse);
+    }
 }
