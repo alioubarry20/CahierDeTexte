@@ -5,9 +5,6 @@ import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Tableau de bord du Chef de département.
- */
 public class ChefDashboard extends BaseView {
 
     public ChefDashboard() {
@@ -18,26 +15,21 @@ public class ChefDashboard extends BaseView {
     private void initialiserUI() {
         setLayout(new BorderLayout());
 
-        // ── En-tête ────────────────────────────────────────
         add(creerHeader("👨‍💼 Chef de département"), BorderLayout.NORTH);
 
-        // ── Contenu central ────────────────────────────────
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.setBackground(COULEUR_FOND);
         contenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        // Message de bienvenue
         JLabel lblBienvenue = new JLabel(
                 "Bienvenue, " + Session.getUtilisateurConnecte().getNomComplet() + " !"
         );
         lblBienvenue.setFont(new Font("Arial", Font.BOLD, 18));
         lblBienvenue.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
 
-        // Grille de boutons d'action
         JPanel grilleActions = new JPanel(new GridLayout(2, 3, 20, 20));
         grilleActions.setOpaque(false);
 
-        // Les 6 actions du chef
         grilleActions.add(creerCarteAction(
                 "👥", "Gérer les utilisateurs",
                 "Ajouter enseignants et responsables",
@@ -74,9 +66,6 @@ public class ChefDashboard extends BaseView {
         add(contenu, BorderLayout.CENTER);
     }
 
-    /**
-     * Crée une carte d'action cliquable avec icône, titre et description.
-     */
     private JPanel creerCarteAction(String icone, String titre,
                                      String description, Color couleur,
                                      java.awt.event.ActionListener action) {
@@ -88,7 +77,6 @@ public class ChefDashboard extends BaseView {
         ));
         carte.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Icône + titre
         JPanel haut = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         haut.setOpaque(false);
 
@@ -102,12 +90,10 @@ public class ChefDashboard extends BaseView {
         haut.add(lblIcone);
         haut.add(lblTitre);
 
-        // Description
         JLabel lblDesc = new JLabel("<html>" + description + "</html>");
         lblDesc.setFont(new Font("Arial", Font.PLAIN, 12));
         lblDesc.setForeground(Color.GRAY);
 
-        // Bouton
         JButton btn = creerBouton("Ouvrir", couleur);
         btn.setPreferredSize(new Dimension(100, 32));
         btn.addActionListener(action);
@@ -123,21 +109,21 @@ public class ChefDashboard extends BaseView {
         return carte;
     }
 
-    // ── Actions (à connecter aux vraies vues plus tard) ────
+    // ── Actions ────────────────────────────────────────
     private void ouvrirGestionUtilisateurs() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new GestionUtilisateursView().setVisible(true);
     }
 
     private void ouvrirGestionCours() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new GestionCoursView().setVisible(true);
     }
 
     private void ouvrirValidationComptes() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new ValidationComptesView().setVisible(true);
     }
 
     private void ouvrirFicheSuivi() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new FicheSuiviView().setVisible(true);
     }
 
     private void ouvrirStatistiques() {
@@ -145,6 +131,6 @@ public class ChefDashboard extends BaseView {
     }
 
     private void ouvrirGestionClasses() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new GestionClassesView().setVisible(true);
     }
 }
