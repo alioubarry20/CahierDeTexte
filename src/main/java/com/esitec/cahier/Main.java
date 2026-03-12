@@ -1,7 +1,16 @@
 package com.esitec.cahier;
 
+import com.esitec.cahier.ui.LoginView;
+import javax.swing.SwingUtilities;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("CahierDeTexte démarré");
+        SwingUtilities.invokeLater(() -> {
+            new LoginView().setVisible(true);
+        });
     }
 }
+
+
+
+// mvn exec:java -Dexec.mainClass="com.esitec.cahier.Main"

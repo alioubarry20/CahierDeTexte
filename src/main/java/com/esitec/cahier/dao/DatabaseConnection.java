@@ -6,6 +6,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/*
+by Aliou barry
+Cette classe DatabaseConnection est responsable de la gestion de la connexion à la base de données MySQL.
+Elle utilise le pattern Singleton pour garantir qu'une seule connexion est établie et partagée à
+travers l'application. Elle fournit une méthode pour obtenir la connexion et une méthode pour la fermer.
+update : 2024-06-17
+*/
 public class DatabaseConnection {
 
     // Instance unique (pattern Singleton)
