@@ -1,44 +1,38 @@
 package com.esitec.cahier.ui.responsable;
 
 import com.esitec.cahier.model.Cours;
-import com.esitec.cahier.model.Seance;
-import com.esitec.cahier.model.Utilisateur;
 import com.esitec.cahier.service.CoursService;
-import com.esitec.cahier.service.SeanceService;
+import com.esitec.cahier.service.StatistiquesService;
 import com.esitec.cahier.ui.BaseView;
-import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class CahierDeTexteView extends BaseView {
+public class AvancementView extends BaseView {
 
     private JTable tableau;
     private DefaultTableModel modeleTableau;
     private CoursService coursService = new CoursService();
-    private SeanceService seanceService = new SeanceService();
+    private StatistiquesService statsService = new StatistiquesService();
 
-    public CahierDeTexteView() {
-        super("Cahier de texte");
+    public AvancementView() {
+        super("Avancement du programme");
         initialiserUI();
-        chargerSeances();
+        chargerAvancement();
     }
 
     private void initialiserUI() {
         setLayout(new BorderLayout());
-        add(creerHeader("📖 Cahier de texte"), BorderLayout.NORTH);
+        add(creerHeader("📈 Avancement du programme"), BorderLayout.NORTH);
 
-        String[] colonnes = {"Date", "Heure", "Durée", "Cours", "Contenu", "Statut"};
+        String[] colonnes = {"Cours", "Volume horaire", "Heures validées", "Taux d'avancement"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableau = new JTable(modeleTableau);
         tableau.setRowHeight(30);
         tableau.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
-
-        // Largeur colonne contenu
-        tableau.getColumnModel().getColumn(4).setPreferredWidth(250);
 
         JScrollPane scroll = new JScrollPane(tableau);
         scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -47,35 +41,23 @@ public class CahierDeTexteView extends BaseView {
         JPanel bas = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bas.setBackground(COULEUR_FOND);
         JButton btnRefresh = creerBouton("🔄 Actualiser", COULEUR_SECONDAIRE);
-        btnRefresh.addActionListener(e -> chargerSeances());
+        btnRefresh.addActionListener(e -> chargerAvancement());
         bas.add(btnRefresh);
         add(bas, BorderLayout.SOUTH);
     }
 
-    private void chargerSeances() {
+    private void chargerAvancement() {
         try {
             modeleTableau.setRowCount(0);
-            Utilisateur u = Session.getUtilisateurConnecte();
-
-            // Récupérer les cours de la classe du responsable
             List<Cours> cours = coursService.listerTous();
-
             for (Cours c : cours) {
-                List<Seance> seances = seanceService.listerParCours(c.getId());
-                for (Seance s : seances) {
-                    modeleTableau.addRow(new Object[]{
-                        s.getDate(),
-                        s.getHeure(),
-                        s.getDuree() + " min",
-                        c.getIntitule(),
-                        s.getContenu(),
-                        s.getStatut()
-                    });
-                }
-            }
-
-            if (modeleTableau.getRowCount() == 0) {
-                afficherErreur("Aucune séance enregistrée !");
+                double taux = statsService.getTauxAvancement(c.getId());
+                modeleTableau.addRow(new Object[]{
+                    c.getIntitule(),
+                    c.getVolumeHoraire() + "h",
+                    String.format("%.1f", taux * c.getVolumeHoraire() / 100) + "h",
+                    String.format("%.1f%%", taux)
+                });
             }
         } catch (Exception e) {
             afficherErreur("Erreur chargement : " + e.getMessage());

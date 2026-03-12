@@ -5,9 +5,6 @@ import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Tableau de bord de l'Enseignant.
- */
 public class EnseignantDashboard extends BaseView {
 
     public EnseignantDashboard() {
@@ -30,7 +27,6 @@ public class EnseignantDashboard extends BaseView {
         lblBienvenue.setFont(new Font("Arial", Font.BOLD, 18));
         lblBienvenue.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
 
-        // 4 actions pour l'enseignant
         JPanel grilleActions = new JPanel(new GridLayout(2, 2, 20, 20));
         grilleActions.setOpaque(false);
 
@@ -98,8 +94,9 @@ public class EnseignantDashboard extends BaseView {
         return carte;
     }
 
+    // ── Actions ────────────────────────────────────────
     private void ouvrirMesCours() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new MesCoursView().setVisible(true);
     }
 
     private void ouvrirAjouterSeance() {
@@ -111,6 +108,6 @@ public class EnseignantDashboard extends BaseView {
     }
 
     private void ouvrirFicheSuivi() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new FicheSuiviEnseignantView().setVisible(true);
     }
 }

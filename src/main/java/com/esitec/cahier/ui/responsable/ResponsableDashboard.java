@@ -5,9 +5,6 @@ import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Tableau de bord du Responsable de classe.
- */
 public class ResponsableDashboard extends BaseView {
 
     public ResponsableDashboard() {
@@ -18,7 +15,7 @@ public class ResponsableDashboard extends BaseView {
     private void initialiserUI() {
         setLayout(new BorderLayout());
 
-        add(creerHeader("📋 Espace Responsable"), BorderLayout.NORTH);
+        add(creerHeader("🎓 Espace Responsable"), BorderLayout.NORTH);
 
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.setBackground(COULEUR_FOND);
@@ -30,7 +27,6 @@ public class ResponsableDashboard extends BaseView {
         lblBienvenue.setFont(new Font("Arial", Font.BOLD, 18));
         lblBienvenue.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
 
-        // 3 actions pour le responsable
         JPanel grilleActions = new JPanel(new GridLayout(1, 3, 20, 20));
         grilleActions.setOpaque(false);
 
@@ -45,7 +41,7 @@ public class ResponsableDashboard extends BaseView {
                 COULEUR_SUCCES, e -> ouvrirValidation()));
 
         grilleActions.add(creerCarte(
-                "📊", "Avancement programme",
+                "📈", "Avancement programme",
                 "Voir l'état d'avancement du programme",
                 new Color(142, 68, 173), e -> ouvrirAvancement()));
 
@@ -101,6 +97,7 @@ public class ResponsableDashboard extends BaseView {
         return carte;
     }
 
+    // ── Actions ────────────────────────────────────────
     private void ouvrirCahierDeTexte() {
         new CahierDeTexteView().setVisible(true);
     }
@@ -110,6 +107,6 @@ public class ResponsableDashboard extends BaseView {
     }
 
     private void ouvrirAvancement() {
-        afficherSucces("Fonctionnalité en cours de développement !");
+        new AvancementView().setVisible(true);
     }
 }
