@@ -10,3 +10,7 @@ public class Main {
         });
     }
 }
+
+
+
+// mvn exec:java -Dexec.mainClass="com.esitec.cahier.Main"
