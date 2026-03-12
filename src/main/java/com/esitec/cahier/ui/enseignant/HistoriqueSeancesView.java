@@ -20,59 +20,63 @@ public class HistoriqueSeancesView extends BaseView {
     private SeanceService seanceService = new SeanceService();
 
     public HistoriqueSeancesView() {
-        super("Historique des séances");
-        initialiserUI();
+        super("Historique des seances");
     }
 
-    private void initialiserUI() {
-        setLayout(new BorderLayout());
-        add(creerHeader("📅 Historique des séances"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(240, 242, 248));
 
-        // Filtre par cours
-        JPanel panneauFiltre = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        panneauFiltre.setBackground(COULEUR_FOND);
-        panneauFiltre.add(new JLabel("Filtrer par cours :"));
+        // Filtre
+        JPanel filtre = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        filtre.setBackground(new Color(240, 242, 248));
+        filtre.add(new JLabel("Filtrer par cours :"));
 
         comboCours = new JComboBox<>();
         comboCours.setPreferredSize(new Dimension(250, 30));
+        comboCours.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
         try {
-            int enseignantId = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(enseignantId);
-            comboCours.addItem(null); // option "Tous"
+            int id = Session.getUtilisateurConnecte().getId();
+            List<Cours> cours = coursService.listerParEnseignant(id);
+            comboCours.addItem(null);
             for (Cours c : cours) comboCours.addItem(c);
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
         }
 
-        JButton btnFiltrer = creerBouton("🔍 Filtrer", COULEUR_SECONDAIRE);
+        JButton btnFiltrer = creerBouton("Filtrer", COULEUR_SECONDAIRE);
+        btnFiltrer.setPreferredSize(new Dimension(100, 30));
         btnFiltrer.addActionListener(e -> chargerSeances());
 
-        panneauFiltre.add(comboCours);
-        panneauFiltre.add(btnFiltrer);
-        add(panneauFiltre, BorderLayout.NORTH);
+        filtre.add(comboCours);
+        filtre.add(btnFiltrer);
+        panel.add(filtre, BorderLayout.NORTH);
 
         // Tableau
-        String[] colonnes = {"ID", "Date", "Heure", "Durée", "Cours", "Statut"};
+        String[] colonnes = {"ID", "Date", "Heure", "Duree", "Cours", "Statut"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableau = new JTable(modeleTableau);
         tableau.setRowHeight(30);
-        tableau.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        tableau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tableau.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableau.setGridColor(new Color(220, 220, 220));
 
         JScrollPane scroll = new JScrollPane(tableau);
         scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        add(scroll, BorderLayout.CENTER);
+        panel.add(scroll, BorderLayout.CENTER);
 
         chargerSeances();
+        return panel;
     }
 
     private void chargerSeances() {
         try {
             modeleTableau.setRowCount(0);
-            int enseignantId = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(enseignantId);
-
+            int id = Session.getUtilisateurConnecte().getId();
+            List<Cours> cours = coursService.listerParEnseignant(id);
             Cours filtre = (Cours) comboCours.getSelectedItem();
 
             for (Cours c : cours) {
@@ -80,17 +84,13 @@ public class HistoriqueSeancesView extends BaseView {
                 List<Seance> seances = seanceService.listerParCours(c.getId());
                 for (Seance s : seances) {
                     modeleTableau.addRow(new Object[]{
-                        s.getId(),
-                        s.getDate(),
-                        s.getHeure(),
-                        s.getDuree() + " min",
-                        c.getIntitule(),
-                        s.getStatut()
+                        s.getId(), s.getDate(), s.getHeure(),
+                        s.getDuree() + " min", c.getIntitule(), s.getStatut()
                     });
                 }
             }
         } catch (Exception e) {
-            afficherErreur("Erreur chargement : " + e.getMessage());
+            afficherErreur("Erreur : " + e.getMessage());
         }
     }
 }

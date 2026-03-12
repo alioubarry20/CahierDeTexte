@@ -12,6 +12,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GestionCoursView extends BaseView {
 
@@ -23,38 +24,41 @@ public class GestionCoursView extends BaseView {
 
     public GestionCoursView() {
         super("Gestion des cours");
-        initialiserUI();
-        chargerCours();
     }
 
-    private void initialiserUI() {
-        setLayout(new BorderLayout());
-        add(creerHeader("📚 Gestion des cours"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(240, 242, 248));
 
-        String[] colonnes = {"ID", "Intitulé", "Volume horaire", "Enseignant", "Classe"};
+        String[] colonnes = {"ID", "Intitule", "Volume horaire", "Enseignant", "Classe"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableau = new JTable(modeleTableau);
         tableau.setRowHeight(30);
-        tableau.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        tableau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tableau.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableau.setGridColor(new Color(220, 220, 220));
 
         JScrollPane scroll = new JScrollPane(tableau);
-        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        add(scroll, BorderLayout.CENTER);
+        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        panel.add(scroll, BorderLayout.CENTER);
 
-        JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        panneauBoutons.setBackground(COULEUR_FOND);
+        JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        boutons.setBackground(new Color(240, 242, 248));
 
-        JButton btnAjouter = creerBouton("➕ Ajouter", COULEUR_SECONDAIRE);
-        JButton btnSupprimer = creerBouton("🗑 Supprimer", COULEUR_DANGER);
+        JButton btnAjouter   = creerBouton("+ Ajouter",  COULEUR_SECONDAIRE);
+        JButton btnSupprimer = creerBouton("Supprimer",  COULEUR_DANGER);
 
         btnAjouter.addActionListener(e -> ouvrirFormulaireAjout());
         btnSupprimer.addActionListener(e -> supprimerCours());
 
-        panneauBoutons.add(btnAjouter);
-        panneauBoutons.add(btnSupprimer);
-        add(panneauBoutons, BorderLayout.SOUTH);
+        boutons.add(btnAjouter);
+        boutons.add(btnSupprimer);
+        panel.add(boutons, BorderLayout.SOUTH);
+
+        chargerCours();
+        return panel;
     }
 
     private void chargerCours() {
@@ -71,42 +75,32 @@ public class GestionCoursView extends BaseView {
                 });
             }
         } catch (Exception e) {
-            afficherErreur("Erreur chargement : " + e.getMessage());
+            afficherErreur("Erreur : " + e.getMessage());
         }
     }
 
     private void ouvrirFormulaireAjout() {
         try {
-            // Récupérer enseignants et classes
             List<Utilisateur> tous = utilisateurService.listerTous();
-            List<Classe> classes = classeService.listerTous();
+            List<Classe> classes   = classeService.listerTous();
 
-            // Filtrer les enseignants
             List<Utilisateur> enseignants = tous.stream()
                 .filter(u -> u.getRole().equals("ENSEIGNANT"))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
-            if (enseignants.isEmpty()) {
-                afficherErreur("Aucun enseignant disponible !");
-                return;
-            }
-            if (classes.isEmpty()) {
-                afficherErreur("Aucune classe disponible !");
-                return;
-            }
+            if (enseignants.isEmpty()) { afficherErreur("Aucun enseignant !"); return; }
+            if (classes.isEmpty())     { afficherErreur("Aucune classe !"); return; }
 
             JTextField champIntitule = new JTextField();
-            JTextField champVolume = new JTextField();
-            JComboBox<Utilisateur> comboEnseignant =
-                new JComboBox<>(enseignants.toArray(new Utilisateur[0]));
-            JComboBox<Classe> comboClasse =
-                new JComboBox<>(classes.toArray(new Classe[0]));
+            JTextField champVolume   = new JTextField();
+            JComboBox<Utilisateur> comboEns   = new JComboBox<>(enseignants.toArray(new Utilisateur[0]));
+            JComboBox<Classe>      comboClasse = new JComboBox<>(classes.toArray(new Classe[0]));
 
             JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-            panel.add(new JLabel("Intitulé :")); panel.add(champIntitule);
+            panel.add(new JLabel("Intitule :"));         panel.add(champIntitule);
             panel.add(new JLabel("Volume horaire (h) :")); panel.add(champVolume);
-            panel.add(new JLabel("Enseignant :")); panel.add(comboEnseignant);
-            panel.add(new JLabel("Classe :")); panel.add(comboClasse);
+            panel.add(new JLabel("Enseignant :"));       panel.add(comboEns);
+            panel.add(new JLabel("Classe :"));           panel.add(comboClasse);
 
             int result = JOptionPane.showConfirmDialog(this, panel,
                 "Ajouter un cours", JOptionPane.OK_CANCEL_OPTION);
@@ -115,10 +109,10 @@ public class GestionCoursView extends BaseView {
                 Cours c = new Cours();
                 c.setIntitule(champIntitule.getText().trim());
                 c.setVolumeHoraire(Integer.parseInt(champVolume.getText().trim()));
-                c.setEnseignant((Enseignant) comboEnseignant.getSelectedItem());
+                c.setEnseignant((Enseignant) comboEns.getSelectedItem());
                 c.setClasse((Classe) comboClasse.getSelectedItem());
                 coursService.ajouter(c);
-                afficherSucces("Cours ajouté !");
+                afficherSucces("Cours ajoute !");
                 chargerCours();
             }
         } catch (Exception e) {
@@ -128,18 +122,14 @@ public class GestionCoursView extends BaseView {
 
     private void supprimerCours() {
         int ligne = tableau.getSelectedRow();
-        if (ligne == -1) {
-            afficherErreur("Sélectionnez un cours !");
-            return;
-        }
+        if (ligne == -1) { afficherErreur("Selectionnez un cours !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Supprimer ce cours ?", "Confirmation",
-            JOptionPane.YES_NO_OPTION);
+            "Supprimer ce cours ?", "Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 coursService.supprimer(id);
-                afficherSucces("Cours supprimé !");
+                afficherSucces("Cours supprime !");
                 chargerCours();
             } catch (Exception e) {
                 afficherErreur("Erreur : " + e.getMessage());

@@ -16,44 +16,46 @@ public class GestionUtilisateursView extends BaseView {
 
     public GestionUtilisateursView() {
         super("Gestion des utilisateurs");
-        initialiserUI();
-        chargerUtilisateurs();
     }
 
-    private void initialiserUI() {
-        setLayout(new BorderLayout());
-        add(creerHeader("👥 Gestion des utilisateurs"), BorderLayout.NORTH);
+    // Appelé depuis ChefDashboard pour afficher dans le contenu principal
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(240, 242, 248));
 
-        // Tableau
-        String[] colonnes = {"ID", "Nom", "Prénom", "Email", "Rôle", "Statut"};
+        String[] colonnes = {"ID", "Nom", "Prenom", "Email", "Role", "Statut"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableau = new JTable(modeleTableau);
         tableau.setRowHeight(30);
-        tableau.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        tableau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tableau.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableau.setGridColor(new Color(220, 220, 220));
 
         JScrollPane scroll = new JScrollPane(tableau);
-        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        add(scroll, BorderLayout.CENTER);
+        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        panel.add(scroll, BorderLayout.CENTER);
 
         // Boutons
-        JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        panneauBoutons.setBackground(COULEUR_FOND);
+        JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        boutons.setBackground(new Color(240, 242, 248));
 
-        JButton btnAjouter = creerBouton("➕ Ajouter", COULEUR_SECONDAIRE);
-        JButton btnSupprimer = creerBouton("🗑 Supprimer", COULEUR_DANGER);
-        JButton btnValider = creerBouton("✅ Valider compte", COULEUR_SUCCES);
+        JButton btnAjouter  = creerBouton("+ Ajouter",        COULEUR_SECONDAIRE);
+        JButton btnSupprimer = creerBouton("Supprimer",        COULEUR_DANGER);
+        JButton btnValider   = creerBouton("Valider compte",   COULEUR_SUCCES);
 
         btnAjouter.addActionListener(e -> ouvrirFormulaireAjout());
         btnSupprimer.addActionListener(e -> supprimerUtilisateur());
         btnValider.addActionListener(e -> validerCompte());
 
-        panneauBoutons.add(btnAjouter);
-        panneauBoutons.add(btnSupprimer);
-        panneauBoutons.add(btnValider);
+        boutons.add(btnAjouter);
+        boutons.add(btnSupprimer);
+        boutons.add(btnValider);
+        panel.add(boutons, BorderLayout.SOUTH);
 
-        add(panneauBoutons, BorderLayout.SOUTH);
+        chargerUtilisateurs();
+        return panel;
     }
 
     private void chargerUtilisateurs() {
@@ -67,7 +69,7 @@ public class GestionUtilisateursView extends BaseView {
                 });
             }
         } catch (Exception e) {
-            afficherErreur("Erreur chargement : " + e.getMessage());
+            afficherErreur("Erreur : " + e.getMessage());
         }
     }
 
@@ -77,18 +79,14 @@ public class GestionUtilisateursView extends BaseView {
 
     private void supprimerUtilisateur() {
         int ligne = tableau.getSelectedRow();
-        if (ligne == -1) {
-            afficherErreur("Sélectionnez un utilisateur !");
-            return;
-        }
+        if (ligne == -1) { afficherErreur("Selectionnez un utilisateur !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Supprimer cet utilisateur ?", "Confirmation",
-            JOptionPane.YES_NO_OPTION);
+            "Supprimer cet utilisateur ?", "Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 service.supprimer(id);
-                afficherSucces("Utilisateur supprimé !");
+                afficherSucces("Utilisateur supprime !");
                 chargerUtilisateurs();
             } catch (Exception e) {
                 afficherErreur("Erreur : " + e.getMessage());
@@ -98,21 +96,17 @@ public class GestionUtilisateursView extends BaseView {
 
     private void validerCompte() {
         int ligne = tableau.getSelectedRow();
-        if (ligne == -1) {
-            afficherErreur("Sélectionnez un utilisateur !");
-            return;
-        }
+        if (ligne == -1) { afficherErreur("Selectionnez un utilisateur !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         try {
             service.validerCompte(id);
-            afficherSucces("Compte validé !");
+            afficherSucces("Compte valide !");
             chargerUtilisateurs();
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
         }
     }
 
-    // Appelée depuis FormulaireUtilisateurView pour rafraîchir
     public void rafraichir() {
         chargerUtilisateurs();
     }

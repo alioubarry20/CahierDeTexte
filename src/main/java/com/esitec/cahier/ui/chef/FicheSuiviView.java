@@ -15,30 +15,30 @@ public class FicheSuiviView extends BaseView {
     private FicheSuiviService ficheSuiviService = new FicheSuiviService();
 
     public FicheSuiviView() {
-        super("Fiche de suivi pédagogique");
-        initialiserUI();
+        super("Fiche de suivi");
     }
 
-    private void initialiserUI() {
-        setSize(500, 300);
-        setLayout(new BorderLayout());
-        add(creerHeader("📄 Fiche de suivi"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(240, 242, 248));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        JPanel contenu = new JPanel();
-        contenu.setLayout(new BoxLayout(contenu, BoxLayout.Y_AXIS));
-        contenu.setBackground(Color.WHITE);
-        contenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        JLabel lblTitre = new JLabel("Generer une fiche de suivi");
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitre.setForeground(new Color(30, 30, 60));
+        lblTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Sélection du cours
-        JLabel lblCours = new JLabel("Sélectionner un cours :");
-        lblCours.setFont(new Font("Arial", Font.BOLD, 13));
+        JLabel lblCours = new JLabel("Selectionner un cours :");
+        lblCours.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblCours.setForeground(new Color(100, 100, 100));
         lblCours.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         comboCours = new JComboBox<>();
-        comboCours.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        comboCours.setMaximumSize(new Dimension(400, 38));
         comboCours.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboCours.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-        // Charger les cours
         try {
             List<Cours> cours = coursService.listerTous();
             for (Cours c : cours) comboCours.addItem(c);
@@ -46,36 +46,39 @@ public class FicheSuiviView extends BaseView {
             afficherErreur("Erreur chargement cours : " + e.getMessage());
         }
 
-        // Boutons export
-        JButton btnPDF = creerBouton("📄 Exporter en PDF", new Color(211, 84, 0));
-        JButton btnExcel = creerBouton("📊 Exporter en Excel", new Color(39, 174, 96));
-        btnPDF.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnExcel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        btnPanel.setBackground(new Color(240, 242, 248));
+        btnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton btnPDF   = creerBouton("Exporter PDF",   new Color(211, 84, 0));
+        JButton btnExcel = creerBouton("Exporter Excel", new Color(39, 174, 96));
 
         btnPDF.addActionListener(e -> exporterPDF());
         btnExcel.addActionListener(e -> exporterExcel());
 
-        contenu.add(lblCours);
-        contenu.add(Box.createVerticalStrut(10));
-        contenu.add(comboCours);
-        contenu.add(Box.createVerticalStrut(25));
-        contenu.add(btnPDF);
-        contenu.add(Box.createVerticalStrut(10));
-        contenu.add(btnExcel);
+        btnPanel.add(btnPDF);
+        btnPanel.add(Box.createHorizontalStrut(15));
+        btnPanel.add(btnExcel);
 
-        add(contenu, BorderLayout.CENTER);
+        panel.add(lblTitre);
+        panel.add(Box.createVerticalStrut(30));
+        panel.add(lblCours);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(comboCours);
+        panel.add(Box.createVerticalStrut(25));
+        panel.add(btnPanel);
+
+        return panel;
     }
 
     private void exporterPDF() {
         Cours cours = (Cours) comboCours.getSelectedItem();
-        if (cours == null) {
-            afficherErreur("Sélectionnez un cours !");
-            return;
-        }
+        if (cours == null) { afficherErreur("Selectionnez un cours !"); return; }
         try {
+            new java.io.File("exports").mkdirs();
             String chemin = "exports/fiche_" + cours.getId() + ".pdf";
             ficheSuiviService.exporterPDF(cours.getId(), chemin);
-            afficherSucces("PDF généré : " + chemin);
+            afficherSucces("PDF genere : " + chemin);
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
         }
@@ -83,14 +86,12 @@ public class FicheSuiviView extends BaseView {
 
     private void exporterExcel() {
         Cours cours = (Cours) comboCours.getSelectedItem();
-        if (cours == null) {
-            afficherErreur("Sélectionnez un cours !");
-            return;
-        }
+        if (cours == null) { afficherErreur("Selectionnez un cours !"); return; }
         try {
+            new java.io.File("exports").mkdirs();
             String chemin = "exports/fiche_" + cours.getId() + ".xlsx";
             ficheSuiviService.exporterExcel(cours.getId(), chemin);
-            afficherSucces("Excel généré : " + chemin);
+            afficherSucces("Excel genere : " + chemin);
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
         }

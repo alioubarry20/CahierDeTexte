@@ -25,75 +25,88 @@ public class AjouterSeanceView extends BaseView {
     private SeanceService seanceService = new SeanceService();
 
     public AjouterSeanceView() {
-        super("Ajouter une séance");
-        initialiserUI();
+        super("Ajouter une seance");
     }
 
-    private void initialiserUI() {
-        setSize(500, 550);
-        setLayout(new BorderLayout());
-        add(creerHeader("➕ Ajouter une séance"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(240, 242, 248));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
 
-        JPanel formulaire = new JPanel();
-        formulaire.setLayout(new BoxLayout(formulaire, BoxLayout.Y_AXIS));
-        formulaire.setBackground(Color.WHITE);
-        formulaire.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        JLabel lblTitre = new JLabel("Nouvelle seance");
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitre.setForeground(new Color(30, 30, 60));
+        lblTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Cours
         comboCours = new JComboBox<>();
+        comboCours.setMaximumSize(new Dimension(400, 38));
+        comboCours.setAlignmentX(Component.LEFT_ALIGNMENT);
         try {
-            int enseignantId = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(enseignantId);
+            int id = Session.getUtilisateurConnecte().getId();
+            List<Cours> cours = coursService.listerParEnseignant(id);
             for (Cours c : cours) comboCours.addItem(c);
         } catch (Exception e) {
-            afficherErreur("Erreur chargement cours : " + e.getMessage());
+            afficherErreur("Erreur : " + e.getMessage());
         }
 
-        // Champs
-        champDate = new JTextField(LocalDate.now().toString());
-        champHeure = new JTextField("08:00");
-        champDuree = new JTextField("60");
-        champContenu = new JTextArea(4, 20);
-        champContenu.setLineWrap(true);
+        champDate         = new JTextField(LocalDate.now().toString());
+        champHeure        = new JTextField("08:00");
+        champDuree        = new JTextField("60");
+        champContenu      = new JTextArea(4, 20);
         champObservations = new JTextArea(3, 20);
+        champContenu.setLineWrap(true);
         champObservations.setLineWrap(true);
 
-        ajouterChamp(formulaire, "Cours", comboCours);
-        ajouterChamp(formulaire, "Date (AAAA-MM-JJ)", champDate);
-        ajouterChamp(formulaire, "Heure (HH:MM)", champHeure);
-        ajouterChamp(formulaire, "Durée (minutes)", champDuree);
-        ajouterChamp(formulaire, "Contenu du cours", new JScrollPane(champContenu));
-        ajouterChamp(formulaire, "Observations", new JScrollPane(champObservations));
+        // Style champs
+        for (JTextField f : new JTextField[]{champDate, champHeure, champDuree}) {
+            f.setMaximumSize(new Dimension(400, 38));
+            f.setAlignmentX(Component.LEFT_ALIGNMENT);
+            f.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        }
 
-        JButton btnSauvegarder = creerBouton("💾 Enregistrer", COULEUR_SUCCES);
-        btnSauvegarder.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JButton btnSauvegarder = creerBouton("Enregistrer", COULEUR_SUCCES);
+        btnSauvegarder.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnSauvegarder.addActionListener(e -> sauvegarder());
 
-        formulaire.add(Box.createVerticalStrut(15));
-        formulaire.add(btnSauvegarder);
+        panel.add(lblTitre);
+        panel.add(Box.createVerticalStrut(25));
+        panel.add(creerLabel("Cours")); panel.add(Box.createVerticalStrut(5));
+        panel.add(comboCours); panel.add(Box.createVerticalStrut(12));
+        panel.add(creerLabel("Date (AAAA-MM-JJ)")); panel.add(Box.createVerticalStrut(5));
+        panel.add(champDate); panel.add(Box.createVerticalStrut(12));
+        panel.add(creerLabel("Heure (HH:MM)")); panel.add(Box.createVerticalStrut(5));
+        panel.add(champHeure); panel.add(Box.createVerticalStrut(12));
+        panel.add(creerLabel("Duree (minutes)")); panel.add(Box.createVerticalStrut(5));
+        panel.add(champDuree); panel.add(Box.createVerticalStrut(12));
+        panel.add(creerLabel("Contenu")); panel.add(Box.createVerticalStrut(5));
+        JScrollPane sc1 = new JScrollPane(champContenu);
+        sc1.setMaximumSize(new Dimension(400, 90));
+        sc1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(sc1); panel.add(Box.createVerticalStrut(12));
+        panel.add(creerLabel("Observations")); panel.add(Box.createVerticalStrut(5));
+        JScrollPane sc2 = new JScrollPane(champObservations);
+        sc2.setMaximumSize(new Dimension(400, 70));
+        sc2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(sc2); panel.add(Box.createVerticalStrut(20));
+        panel.add(btnSauvegarder);
 
-        add(new JScrollPane(formulaire), BorderLayout.CENTER);
+        return panel;
     }
 
-    private void ajouterChamp(JPanel panel, String label, JComponent champ) {
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Arial", Font.BOLD, 12));
+    private JLabel creerLabel(String texte) {
+        JLabel lbl = new JLabel(texte);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(new Color(80, 80, 80));
         lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
-        champ.setMaximumSize(new Dimension(Integer.MAX_VALUE, champ instanceof JScrollPane ? 80 : 35));
-        champ.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.add(lbl);
-        panel.add(Box.createVerticalStrut(4));
-        panel.add(champ);
-        panel.add(Box.createVerticalStrut(12));
+        return lbl;
     }
 
     private void sauvegarder() {
         try {
             Cours cours = (Cours) comboCours.getSelectedItem();
-            if (cours == null) {
-                afficherErreur("Aucun cours disponible !");
-                return;
-            }
+            if (cours == null) { afficherErreur("Aucun cours !"); return; }
 
             Seance s = new Seance();
             s.setCours(cours);
@@ -104,9 +117,15 @@ public class AjouterSeanceView extends BaseView {
             s.setObservations(champObservations.getText().trim());
             s.setStatut("EN_ATTENTE");
 
-            seanceService.ajouter(s);
-            afficherSucces("Séance enregistrée avec succès !");
-            dispose();
+            new SeanceService().ajouter(s);
+            afficherSucces("Seance enregistree !");
+
+            // Vider les champs
+            champDate.setText(LocalDate.now().toString());
+            champHeure.setText("08:00");
+            champDuree.setText("60");
+            champContenu.setText("");
+            champObservations.setText("");
 
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());

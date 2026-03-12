@@ -1,113 +1,120 @@
 package com.esitec.cahier.ui.enseignant;
 
+import com.esitec.cahier.service.CoursService;
+import com.esitec.cahier.service.SeanceService;
+import com.esitec.cahier.model.Cours;
+import com.esitec.cahier.model.Seance;
 import com.esitec.cahier.ui.BaseView;
 import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class EnseignantDashboard extends BaseView {
 
+    private CoursService coursService = new CoursService();
+    private SeanceService seanceService = new SeanceService();
+
     public EnseignantDashboard() {
         super("Tableau de bord — Enseignant");
+        SIDEBAR_BG     = new Color(25, 60, 95);
+        SIDEBAR_TOP    = new Color(15, 45, 75);
+        SIDEBAR_ACTIVE = new Color(0, 120, 215);
         initialiserUI();
     }
 
     private void initialiserUI() {
-        setLayout(new BorderLayout());
-
-        add(creerHeader("👨‍🏫 Espace Enseignant"), BorderLayout.NORTH);
+        String[][] menu = {
+            {"", "Accueil"},
+            {"", "Ajouter Seance"},
+            {"", "Mes Seances"},
+            {"", "Mes Cours"}
+        };
+        JPanel sidebar = creerSidebar("Espace Enseignant", menu);
 
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.setBackground(COULEUR_FOND);
-        contenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        contenu.add(creerHeader("Mon Tableau de bord"), BorderLayout.NORTH);
+        contenu.add(creerContenuAccueil(), BorderLayout.CENTER);
 
-        JLabel lblBienvenue = new JLabel(
-                "Bonjour, " + Session.getUtilisateurConnecte().getNomComplet()
-        );
-        lblBienvenue.setFont(new Font("Arial", Font.BOLD, 18));
-        lblBienvenue.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
-
-        JPanel grilleActions = new JPanel(new GridLayout(2, 2, 20, 20));
-        grilleActions.setOpaque(false);
-
-        grilleActions.add(creerCarte(
-                "📋", "Mes cours",
-                "Voir la liste de vos cours assignés",
-                COULEUR_SECONDAIRE, e -> ouvrirMesCours()));
-
-        grilleActions.add(creerCarte(
-                "➕", "Ajouter une séance",
-                "Enregistrer une nouvelle séance de cours",
-                COULEUR_SUCCES, e -> ouvrirAjouterSeance()));
-
-        grilleActions.add(creerCarte(
-                "📅", "Historique des séances",
-                "Consulter toutes vos séances enregistrées",
-                new Color(142, 68, 173), e -> ouvrirHistorique()));
-
-        grilleActions.add(creerCarte(
-                "📄", "Ma fiche de suivi",
-                "Générer votre fiche pédagogique PDF",
-                new Color(211, 84, 0), e -> ouvrirFicheSuivi()));
-
-        contenu.add(lblBienvenue, BorderLayout.NORTH);
-        contenu.add(grilleActions, BorderLayout.CENTER);
-
-        add(contenu, BorderLayout.CENTER);
+        construireLayout(sidebar, contenu);
+        relierMenu();
     }
 
-    private JPanel creerCarte(String icone, String titre,
-                               String description, Color couleur,
-                               java.awt.event.ActionListener action) {
-        JPanel carte = new JPanel(new BorderLayout());
-        carte.setBackground(Color.WHITE);
-        carte.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(25, 25, 25, 25)
-        ));
+    private JPanel creerContenuAccueil() {
+        JPanel panel = new JPanel();
+        panel.setBackground(COULEUR_FOND);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        JLabel lblIcone = new JLabel(icone);
-        lblIcone.setFont(new Font("Arial", Font.PLAIN, 40));
+        JLabel lblHello = new JLabel("Hello !");
+        lblHello.setFont(new Font("Segoe UI", Font.BOLD, 52));
+        lblHello.setForeground(new Color(0, 120, 215));
+        lblHello.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblTitre = new JLabel(titre);
-        lblTitre.setFont(new Font("Arial", Font.BOLD, 15));
-        lblTitre.setForeground(couleur);
+        JLabel lblSub = new JLabel("Bienvenue dans votre espace enseignant");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        lblSub.setForeground(new Color(136, 136, 136));
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblDesc = new JLabel("<html>" + description + "</html>");
-        lblDesc.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblDesc.setForeground(Color.GRAY);
-        lblDesc.setBorder(BorderFactory.createEmptyBorder(5, 0, 15, 0));
+        JPanel cards = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
+        cards.setBackground(COULEUR_FOND);
+        cards.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton btn = creerBouton("Accéder", couleur);
-        btn.addActionListener(action);
+        try {
+            int enseignantId = Session.getUtilisateurConnecte().getId();
+            List<Cours> cours = coursService.listerParEnseignant(enseignantId);
+            int nbCours = cours.size();
+            int nbSeances = 0, nbValidees = 0, nbAttente = 0;
 
-        JPanel textes = new JPanel();
-        textes.setLayout(new BoxLayout(textes, BoxLayout.Y_AXIS));
-        textes.setOpaque(false);
-        textes.add(lblTitre);
-        textes.add(lblDesc);
-        textes.add(btn);
+            for (Cours c : cours) {
+                List<Seance> seances = seanceService.listerParCours(c.getId());
+                nbSeances += seances.size();
+                for (Seance s : seances) {
+                    if (s.getStatut().equals("VALIDEE"))    nbValidees++;
+                    if (s.getStatut().equals("EN_ATTENTE")) nbAttente++;
+                }
+            }
 
-        carte.add(lblIcone, BorderLayout.NORTH);
-        carte.add(textes, BorderLayout.CENTER);
+            cards.add(creerCarteStats("Mes Cours",  String.valueOf(nbCours),   new Color(0, 120, 215)));
+            cards.add(creerCarteStats("Seances",    String.valueOf(nbSeances),  new Color(0, 180, 120)));
+            cards.add(creerCarteStats("En attente", String.valueOf(nbAttente),  new Color(255, 140, 0)));
+            cards.add(creerCarteStats("Validees",   String.valueOf(nbValidees), new Color(150, 50, 200)));
+        } catch (Exception e) {
+            cards.add(new JLabel("Erreur chargement stats"));
+        }
 
-        return carte;
+        panel.add(lblHello);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(lblSub);
+        panel.add(Box.createVerticalStrut(30));
+        panel.add(cards);
+
+        return panel;
     }
 
-    // ── Actions ────────────────────────────────────────
-    private void ouvrirMesCours() {
-        new MesCoursView().setVisible(true);
-    }
+    private void relierMenu() {
+        Component[] items = sidebarItems.getComponents();
 
-    private void ouvrirAjouterSeance() {
-        new AjouterSeanceView().setVisible(true);
-    }
-
-    private void ouvrirHistorique() {
-        new HistoriqueSeancesView().setVisible(true);
-    }
-
-    private void ouvrirFicheSuivi() {
-        new FicheSuiviEnseignantView().setVisible(true);
+        if (items.length >= 1) items[0].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Mon Tableau de bord", creerContenuAccueil());
+            }
+        });
+        if (items.length >= 2) items[1].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Ajouter une seance", new AjouterSeanceView().creerPanneau());
+            }
+        });
+        if (items.length >= 3) items[2].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Mes seances", new HistoriqueSeancesView().creerPanneau());
+            }
+        });
+        if (items.length >= 4) items[3].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Mes cours", new MesCoursView().creerPanneau());
+            }
+        });
     }
 }

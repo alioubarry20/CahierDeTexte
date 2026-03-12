@@ -11,60 +11,41 @@ public class StatistiquesView extends BaseView {
 
     public StatistiquesView() {
         super("Statistiques");
-        initialiserUI();
     }
 
-    private void initialiserUI() {
-        setSize(600, 400);
-        setLayout(new BorderLayout());
-        add(creerHeader("📊 Statistiques globales"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(240, 242, 248));
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        JPanel contenu = new JPanel(new GridLayout(2, 2, 20, 20));
-        contenu.setBackground(COULEUR_FOND);
-        contenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        JPanel cards = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
+        cards.setBackground(new Color(240, 242, 248));
+        cards.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         try {
-            int nbEnseignants = service.getNombreEnseignants();
+            int nbEns   = service.getNombreEnseignants();
             int nbCours = service.getNombreCours();
-            int nbValidees = service.getNombreSeancesValidees();
-            int nbAttente = service.getNombreSeancesEnAttente();
+            int nbVal   = service.getNombreSeancesValidees();
+            int nbAtt   = service.getNombreSeancesEnAttente();
 
-            contenu.add(creerCarte("👨‍🏫 Enseignants",
-                String.valueOf(nbEnseignants), COULEUR_SECONDAIRE));
-            contenu.add(creerCarte("📚 Cours",
-                String.valueOf(nbCours), new Color(142, 68, 173)));
-            contenu.add(creerCarte("✅ Séances validées",
-                String.valueOf(nbValidees), COULEUR_SUCCES));
-            contenu.add(creerCarte("⏳ Séances en attente",
-                String.valueOf(nbAttente), new Color(211, 84, 0)));
-
+            cards.add(creerCarteStats("Enseignants",  String.valueOf(nbEns),   new Color(0, 120, 215)));
+            cards.add(creerCarteStats("Cours",        String.valueOf(nbCours), new Color(0, 180, 120)));
+            cards.add(creerCarteStats("Seances val.", String.valueOf(nbVal),   new Color(255, 140, 0)));
+            cards.add(creerCarteStats("En attente",   String.valueOf(nbAtt),   new Color(150, 50, 200)));
         } catch (Exception e) {
-            afficherErreur("Erreur chargement : " + e.getMessage());
+            cards.add(new JLabel("Erreur chargement stats"));
         }
 
-        add(contenu, BorderLayout.CENTER);
-    }
+        JLabel lblTitre = new JLabel("Vue d'ensemble");
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitre.setForeground(new Color(30, 30, 60));
+        lblTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    private JPanel creerCarte(String titre, String valeur, Color couleur) {
-        JPanel carte = new JPanel(new BorderLayout());
-        carte.setBackground(Color.WHITE);
-        carte.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220)),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+        panel.add(lblTitre);
+        panel.add(Box.createVerticalStrut(25));
+        panel.add(cards);
 
-        JLabel lblTitre = new JLabel(titre);
-        lblTitre.setFont(new Font("Arial", Font.BOLD, 14));
-        lblTitre.setForeground(couleur);
-
-        JLabel lblValeur = new JLabel(valeur);
-        lblValeur.setFont(new Font("Arial", Font.BOLD, 48));
-        lblValeur.setForeground(couleur);
-        lblValeur.setHorizontalAlignment(SwingConstants.CENTER);
-
-        carte.add(lblTitre, BorderLayout.NORTH);
-        carte.add(lblValeur, BorderLayout.CENTER);
-
-        return carte;
+        return panel;
     }
 }

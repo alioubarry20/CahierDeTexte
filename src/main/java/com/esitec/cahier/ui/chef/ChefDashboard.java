@@ -1,136 +1,137 @@
 package com.esitec.cahier.ui.chef;
 
+import com.esitec.cahier.service.StatistiquesService;
 import com.esitec.cahier.ui.BaseView;
-import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
 
 public class ChefDashboard extends BaseView {
 
+    private StatistiquesService statsService = new StatistiquesService();
+
     public ChefDashboard() {
-        super("Tableau de bord — Chef de département");
+        super("Tableau de bord — Chef de departement");
+        SIDEBAR_BG     = new Color(45, 45, 80);
+        SIDEBAR_TOP    = new Color(35, 35, 65);
+        SIDEBAR_ACTIVE = new Color(70, 70, 120);
         initialiserUI();
     }
 
     private void initialiserUI() {
-        setLayout(new BorderLayout());
-
-        add(creerHeader("👨‍💼 Chef de département"), BorderLayout.NORTH);
+        String[][] menu = {
+            {"", "Accueil"},
+            {"", "Enseignants"},
+            {"", "Classes"},
+            {"", "Cours"},
+            {"", "Statistiques"},
+            {"", "Fiche de Suivi"}
+        };
+        JPanel sidebar = creerSidebar("Espace Chef de Departement", menu);
 
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.setBackground(COULEUR_FOND);
-        contenu.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        contenu.add(creerHeader("Tableau de bord"), BorderLayout.NORTH);
+        contenu.add(creerContenuAccueil(), BorderLayout.CENTER);
 
-        JLabel lblBienvenue = new JLabel(
-                "Bienvenue, " + Session.getUtilisateurConnecte().getNomComplet() + " !"
-        );
-        lblBienvenue.setFont(new Font("Arial", Font.BOLD, 18));
-        lblBienvenue.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
-
-        JPanel grilleActions = new JPanel(new GridLayout(2, 3, 20, 20));
-        grilleActions.setOpaque(false);
-
-        grilleActions.add(creerCarteAction(
-                "👥", "Gérer les utilisateurs",
-                "Ajouter enseignants et responsables",
-                COULEUR_SECONDAIRE, e -> ouvrirGestionUtilisateurs()));
-
-        grilleActions.add(creerCarteAction(
-                "📚", "Gérer les cours",
-                "Assigner des cours aux enseignants",
-                new Color(142, 68, 173), e -> ouvrirGestionCours()));
-
-        grilleActions.add(creerCarteAction(
-                "✅", "Valider les comptes",
-                "Approuver les nouvelles inscriptions",
-                COULEUR_SUCCES, e -> ouvrirValidationComptes()));
-
-        grilleActions.add(creerCarteAction(
-                "📄", "Fiche de suivi",
-                "Générer les fiches pédagogiques PDF",
-                new Color(211, 84, 0), e -> ouvrirFicheSuivi()));
-
-        grilleActions.add(creerCarteAction(
-                "📊", "Statistiques",
-                "Voir les statistiques globales",
-                new Color(22, 160, 133), e -> ouvrirStatistiques()));
-
-        grilleActions.add(creerCarteAction(
-                "🏫", "Gérer les classes",
-                "Ajouter et gérer les classes",
-                new Color(39, 60, 117), e -> ouvrirGestionClasses()));
-
-        contenu.add(lblBienvenue, BorderLayout.NORTH);
-        contenu.add(grilleActions, BorderLayout.CENTER);
-
-        add(contenu, BorderLayout.CENTER);
+        construireLayout(sidebar, contenu);
+        relierMenu();
     }
 
-    private JPanel creerCarteAction(String icone, String titre,
-                                     String description, Color couleur,
-                                     java.awt.event.ActionListener action) {
-        JPanel carte = new JPanel(new BorderLayout());
-        carte.setBackground(Color.WHITE);
-        carte.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
-        carte.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    private JPanel creerContenuAccueil() {
+        JPanel panel = new JPanel();
+        panel.setBackground(COULEUR_FOND);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        JPanel haut = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        haut.setOpaque(false);
+        JLabel lblHello = new JLabel("Hello !");
+        lblHello.setFont(new Font("Segoe UI", Font.BOLD, 52));
+        lblHello.setForeground(new Color(0, 120, 215));
+        lblHello.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblIcone = new JLabel(icone + " ");
-        lblIcone.setFont(new Font("Arial", Font.PLAIN, 28));
+        JLabel lblSub = new JLabel("Bienvenue dans votre espace chef de departement");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        lblSub.setForeground(new Color(136, 136, 136));
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblTitre = new JLabel(titre);
-        lblTitre.setFont(new Font("Arial", Font.BOLD, 14));
-        lblTitre.setForeground(couleur);
+        JPanel cards = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
+        cards.setBackground(COULEUR_FOND);
+        cards.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        haut.add(lblIcone);
-        haut.add(lblTitre);
+        try {
+            int nbEns   = statsService.getNombreEnseignants();
+            int nbCours = statsService.getNombreCours();
+            int nbVal   = statsService.getNombreSeancesValidees();
+            int nbAtt   = statsService.getNombreSeancesEnAttente();
 
-        JLabel lblDesc = new JLabel("<html>" + description + "</html>");
-        lblDesc.setFont(new Font("Arial", Font.PLAIN, 12));
-        lblDesc.setForeground(Color.GRAY);
+            cards.add(creerCarteStats("Enseignants",  String.valueOf(nbEns),   new Color(0, 120, 215)));
+            cards.add(creerCarteStats("Cours",        String.valueOf(nbCours), new Color(0, 180, 120)));
+            cards.add(creerCarteStats("Seances val.", String.valueOf(nbVal),   new Color(255, 140, 0)));
+            cards.add(creerCarteStats("En attente",   String.valueOf(nbAtt),   new Color(150, 50, 200)));
+        } catch (Exception e) {
+            cards.add(new JLabel("Erreur chargement stats"));
+        }
 
-        JButton btn = creerBouton("Ouvrir", couleur);
-        btn.setPreferredSize(new Dimension(100, 32));
-        btn.addActionListener(action);
+        panel.add(lblHello);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(lblSub);
+        panel.add(Box.createVerticalStrut(30));
+        panel.add(cards);
 
-        JPanel bas = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bas.setOpaque(false);
-        bas.add(btn);
-
-        carte.add(haut, BorderLayout.NORTH);
-        carte.add(lblDesc, BorderLayout.CENTER);
-        carte.add(bas, BorderLayout.SOUTH);
-
-        return carte;
+        return panel;
     }
 
-    // ── Actions ────────────────────────────────────────
-    private void ouvrirGestionUtilisateurs() {
-        new GestionUtilisateursView().setVisible(true);
+    private JPanel creerPanneauUtilisateurs() {
+        return new GestionUtilisateursView().creerPanneau();
     }
 
-    private void ouvrirGestionCours() {
-        new GestionCoursView().setVisible(true);
+    private JPanel creerPanneauClasses() {
+        return new GestionClassesView().creerPanneau();
     }
 
-    private void ouvrirValidationComptes() {
-        new ValidationComptesView().setVisible(true);
+    private JPanel creerPanneauCours() {
+        return new GestionCoursView().creerPanneau();
     }
 
-    private void ouvrirFicheSuivi() {
-        new FicheSuiviView().setVisible(true);
+    private JPanel creerPanneauStats() {
+        return new StatistiquesView().creerPanneau();
     }
 
-    private void ouvrirStatistiques() {
-        new StatistiquesView().setVisible(true);
+    private JPanel creerPanneauFiche() {
+        return new FicheSuiviView().creerPanneau();
     }
 
-    private void ouvrirGestionClasses() {
-        new GestionClassesView().setVisible(true);
+    private void relierMenu() {
+        Component[] items = sidebarItems.getComponents();
+
+        if (items.length >= 1) items[0].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Tableau de bord", creerContenuAccueil());
+            }
+        });
+        if (items.length >= 2) items[1].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Gestion des utilisateurs", creerPanneauUtilisateurs());
+            }
+        });
+        if (items.length >= 3) items[2].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Gestion des classes", creerPanneauClasses());
+            }
+        });
+        if (items.length >= 4) items[3].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Gestion des cours", creerPanneauCours());
+            }
+        });
+        if (items.length >= 5) items[4].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Statistiques", creerPanneauStats());
+            }
+        });
+        if (items.length >= 6) items[5].addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                changerContenu("Fiche de suivi", creerPanneauFiche());
+            }
+        });
     }
 }

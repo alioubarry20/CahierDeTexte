@@ -10,9 +10,6 @@ import com.esitec.cahier.ui.responsable.ResponsableDashboard;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Fenêtre de connexion — première page de l'application.
- */
 public class LoginView extends JFrame {
 
     private JTextField     champEmail;
@@ -23,128 +20,141 @@ public class LoginView extends JFrame {
 
     public LoginView() {
         this.authService = new AuthService();
+        setTitle("ESITEC - Cahier de Texte");
+        setSize(860, 420);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setResizable(false);
         initialiserUI();
     }
 
     private void initialiserUI() {
-        setTitle("CahierDeTexte ESITEC — Connexion");
-        setSize(450, 520);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
+        JPanel root = new JPanel(new GridLayout(1, 2));
 
-        // ── Panneau principal ──────────────────────────────
-        JPanel panneauPrincipal = new JPanel(new BorderLayout());
-        panneauPrincipal.setBackground(Color.WHITE);
+        // ── GAUCHE : formulaire ──────────────────────────
+        JPanel gauche = new JPanel();
+        gauche.setBackground(new Color(245, 245, 245));
+        gauche.setLayout(new BoxLayout(gauche, BoxLayout.Y_AXIS));
+        gauche.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
-        // ── En-tête bleu ───────────────────────────────────
-        JPanel header = new JPanel();
-        header.setBackground(new Color(33, 97, 140));
-        header.setPreferredSize(new Dimension(450, 140));
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBorder(BorderFactory.createEmptyBorder(25, 20, 25, 20));
+        JLabel lblTitre = new JLabel("Login");
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblTitre.setForeground(new Color(30, 30, 30));
+        lblTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblAppName = new JLabel("📚 Cahier de Texte");
-        lblAppName.setFont(new Font("Arial", Font.BOLD, 24));
-        lblAppName.setForeground(Color.WHITE);
-        lblAppName.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblEsitec = new JLabel("ESITEC — SUP DE CO DAKAR");
-        lblEsitec.setFont(new Font("Arial", Font.PLAIN, 13));
-        lblEsitec.setForeground(new Color(200, 220, 240));
-        lblEsitec.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        header.add(lblAppName);
-        header.add(Box.createVerticalStrut(8));
-        header.add(lblEsitec);
-
-        // ── Formulaire ─────────────────────────────────────
-        JPanel formulaire = new JPanel();
-        formulaire.setLayout(new BoxLayout(formulaire, BoxLayout.Y_AXIS));
-        formulaire.setBackground(Color.WHITE);
-        formulaire.setBorder(BorderFactory.createEmptyBorder(35, 50, 30, 50));
-
-        // Email
-        JLabel lblEmail = new JLabel("Adresse email");
-        lblEmail.setFont(new Font("Arial", Font.BOLD, 13));
-        lblEmail.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        champEmail = new JTextField();
-        champEmail.setFont(new Font("Arial", Font.PLAIN, 14));
-        champEmail.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        champEmail.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-
-        // Mot de passe
-        JLabel lblMdp = new JLabel("Mot de passe");
-        lblMdp.setFont(new Font("Arial", Font.BOLD, 13));
-        lblMdp.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        champEmail = creerChampTexte("Email");
         champMotDePasse = new JPasswordField();
-        champMotDePasse.setFont(new Font("Arial", Font.PLAIN, 14));
-        champMotDePasse.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        champMotDePasse.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        styliserChamp(champMotDePasse);
 
-        // Message d'erreur (invisible au départ)
         lblMessage = new JLabel(" ");
-        lblMessage.setFont(new Font("Arial", Font.ITALIC, 12));
-        lblMessage.setForeground(new Color(192, 57, 43));
-        lblMessage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblMessage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblMessage.setForeground(new Color(200, 50, 50));
+        lblMessage.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Bouton connexion
-        btnConnecter = new JButton("Se connecter");
-        btnConnecter.setFont(new Font("Arial", Font.BOLD, 15));
-        btnConnecter.setBackground(new Color(33, 97, 140));
-        btnConnecter.setForeground(Color.WHITE);
+        btnConnecter = new JButton("Login");
+        btnConnecter.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnConnecter.setBackground(new Color(245, 245, 245));
+        btnConnecter.setForeground(new Color(0, 120, 215));
+        btnConnecter.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 120, 215), 2),
+            BorderFactory.createEmptyBorder(10, 0, 10, 0)
+        ));
         btnConnecter.setFocusPainted(false);
-        btnConnecter.setBorderPainted(false);
         btnConnecter.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnConnecter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        btnConnecter.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnConnecter.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnConnecter.addActionListener(e -> connecter());
-
-        // Appuyer sur Entrée = connexion
         champMotDePasse.addActionListener(e -> connecter());
 
-        // Assemblage formulaire
-        formulaire.add(lblEmail);
-        formulaire.add(Box.createVerticalStrut(6));
-        formulaire.add(champEmail);
-        formulaire.add(Box.createVerticalStrut(18));
-        formulaire.add(lblMdp);
-        formulaire.add(Box.createVerticalStrut(6));
-        formulaire.add(champMotDePasse);
-        formulaire.add(Box.createVerticalStrut(10));
-        formulaire.add(lblMessage);
-        formulaire.add(Box.createVerticalStrut(15));
-        formulaire.add(btnConnecter);
+        gauche.add(lblTitre);
+        gauche.add(Box.createVerticalStrut(30));
+        gauche.add(creerLabel("Email"));
+        gauche.add(Box.createVerticalStrut(4));
+        gauche.add(champEmail);
+        gauche.add(Box.createVerticalStrut(12));
+        gauche.add(creerLabel("Password"));
+        gauche.add(Box.createVerticalStrut(4));
+        gauche.add(champMotDePasse);
+        gauche.add(Box.createVerticalStrut(8));
+        gauche.add(lblMessage);
+        gauche.add(Box.createVerticalStrut(20));
+        gauche.add(btnConnecter);
 
-        panneauPrincipal.add(header, BorderLayout.NORTH);
-        panneauPrincipal.add(formulaire, BorderLayout.CENTER);
+        // ── DROITE : branding ────────────────────────────
+        JPanel droite = new JPanel();
+        droite.setBackground(new Color(0, 120, 215));
+        droite.setLayout(new BoxLayout(droite, BoxLayout.Y_AXIS));
+        droite.setBorder(BorderFactory.createEmptyBorder(60, 40, 60, 40));
 
-        add(panneauPrincipal);
+        JLabel lblWelcome = new JLabel("<html><center>Welcome to the<br>application</center></html>");
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        lblWelcome.setForeground(Color.WHITE);
+        lblWelcome.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblSub = new JLabel("login to continue");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblSub.setForeground(new Color(200, 230, 255));
+        lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblBrand = new JLabel("ESITEC");
+        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblBrand.setForeground(new Color(176, 212, 255));
+        lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblBrandSub = new JLabel("Cahier de Texte Numerique");
+        lblBrandSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblBrandSub.setForeground(new Color(200, 230, 255));
+        lblBrandSub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        droite.add(Box.createVerticalGlue());
+        droite.add(lblWelcome);
+        droite.add(Box.createVerticalStrut(10));
+        droite.add(lblSub);
+        droite.add(Box.createVerticalStrut(30));
+        droite.add(lblBrand);
+        droite.add(Box.createVerticalStrut(4));
+        droite.add(lblBrandSub);
+        droite.add(Box.createVerticalGlue());
+
+        root.add(gauche);
+        root.add(droite);
+        add(root);
     }
 
-    /**
-     * Logique de connexion appelée quand on clique sur le bouton.
-     */
+    private JTextField creerChampTexte(String placeholder) {
+        JTextField champ = new JTextField();
+        styliserChamp(champ);
+        return champ;
+    }
+
+    private void styliserChamp(JComponent champ) {
+        champ.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        champ.setBackground(new Color(245, 245, 245));
+        champ.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 120, 215)),
+            BorderFactory.createEmptyBorder(6, 0, 6, 0)
+        ));
+        champ.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        champ.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+
+    private JLabel creerLabel(String texte) {
+        JLabel lbl = new JLabel(texte);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setForeground(new Color(85, 85, 85));
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return lbl;
+    }
+
     private void connecter() {
         String email = champEmail.getText().trim();
         String mdp   = new String(champMotDePasse.getPassword());
 
-        // Désactiver le bouton pendant le traitement
         btnConnecter.setEnabled(false);
         btnConnecter.setText("Connexion...");
 
         try {
             Utilisateur utilisateur = authService.connecter(email, mdp);
-
-            // Rediriger selon le rôle
             switch (utilisateur.getRole()) {
                 case "CHEF_DEPARTEMENT":
                     new ChefDashboard().setVisible(true);
@@ -156,13 +166,11 @@ public class LoginView extends JFrame {
                     new ResponsableDashboard().setVisible(true);
                     break;
             }
-
-            dispose(); // Ferme la fenêtre de login
-
+            dispose();
         } catch (AuthException ex) {
-            lblMessage.setText("❌ " + ex.getMessage());
+            lblMessage.setText("  " + ex.getMessage());
             btnConnecter.setEnabled(true);
-            btnConnecter.setText("Se connecter");
+            btnConnecter.setText("Login");
             champMotDePasse.setText("");
         }
     }
