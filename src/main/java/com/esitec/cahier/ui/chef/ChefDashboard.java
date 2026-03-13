@@ -20,7 +20,7 @@ public class ChefDashboard extends BaseView {
     private void initialiserUI() {
         String[][] menu = {
             {"", "Accueil"},
-            {"", "Enseignants"},
+            {"", "Utilisateurs"},
             {"", "Classes"},
             {"", "Cours"},
             {"", "Statistiques"},

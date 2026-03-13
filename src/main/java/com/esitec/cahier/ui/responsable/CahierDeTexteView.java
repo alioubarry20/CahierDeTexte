@@ -1,10 +1,12 @@
 package com.esitec.cahier.ui.responsable;
 
 import com.esitec.cahier.model.Cours;
+import com.esitec.cahier.model.ResponsableClasse;
 import com.esitec.cahier.model.Seance;
 import com.esitec.cahier.service.CoursService;
 import com.esitec.cahier.service.SeanceService;
 import com.esitec.cahier.ui.BaseView;
+import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -54,7 +56,15 @@ public class CahierDeTexteView extends BaseView {
     private void chargerSeances() {
         try {
             modeleTableau.setRowCount(0);
-            List<Cours> cours = coursService.listerTous();
+
+            // Filtrer par classe du responsable
+            ResponsableClasse responsable =
+                (ResponsableClasse) Session.getUtilisateurConnecte();
+
+            List<Cours> cours = responsable.getClasse() != null
+                ? coursService.listerParClasse(responsable.getClasse().getId())
+                : coursService.listerTous();
+
             for (Cours c : cours) {
                 List<Seance> seances = seanceService.listerParCours(c.getId());
                 for (Seance s : seances) {
@@ -66,6 +76,10 @@ public class CahierDeTexteView extends BaseView {
                         s.getStatut()
                     });
                 }
+            }
+
+            if (modeleTableau.getRowCount() == 0) {
+                afficherErreur("Aucune seance pour votre classe !");
             }
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());

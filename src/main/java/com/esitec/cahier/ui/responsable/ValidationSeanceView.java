@@ -1,10 +1,12 @@
 package com.esitec.cahier.ui.responsable;
 
 import com.esitec.cahier.model.Cours;
+import com.esitec.cahier.model.ResponsableClasse;
 import com.esitec.cahier.model.Seance;
 import com.esitec.cahier.service.CoursService;
 import com.esitec.cahier.service.SeanceService;
 import com.esitec.cahier.ui.BaseView;
+import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -43,8 +45,8 @@ public class ValidationSeanceView extends BaseView {
         JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         boutons.setBackground(new Color(240, 248, 244));
 
-        JButton btnValider = creerBouton("Valider",  COULEUR_SUCCES);
-        JButton btnRejeter = creerBouton("Rejeter",  COULEUR_DANGER);
+        JButton btnValider = creerBouton("Valider", COULEUR_SUCCES);
+        JButton btnRejeter = creerBouton("Rejeter", COULEUR_DANGER);
 
         btnValider.addActionListener(e -> validerSeance());
         btnRejeter.addActionListener(e -> rejeterSeance());
@@ -60,7 +62,15 @@ public class ValidationSeanceView extends BaseView {
     private void chargerSeances() {
         try {
             modeleTableau.setRowCount(0);
-            List<Cours> cours = coursService.listerTous();
+
+            // Filtrer par classe du responsable
+            ResponsableClasse responsable =
+                (ResponsableClasse) Session.getUtilisateurConnecte();
+
+            List<Cours> cours = responsable.getClasse() != null
+                ? coursService.listerParClasse(responsable.getClasse().getId())
+                : coursService.listerTous();
+
             for (Cours c : cours) {
                 List<Seance> seances = seanceService.listerParCours(c.getId());
                 for (Seance s : seances) {
@@ -71,6 +81,10 @@ public class ValidationSeanceView extends BaseView {
                         });
                     }
                 }
+            }
+
+            if (modeleTableau.getRowCount() == 0) {
+                afficherErreur("Aucune seance en attente pour votre classe !");
             }
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
