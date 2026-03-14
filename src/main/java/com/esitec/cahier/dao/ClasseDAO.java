@@ -23,7 +23,7 @@ public class ClasseDAO {
         List<Classe> liste = new ArrayList<>();
         String sql = "SELECT * FROM classes";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
 
@@ -42,7 +42,7 @@ public class ClasseDAO {
     public Classe findById(int id) throws DatabaseException {
         String sql = "SELECT * FROM classes WHERE id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
@@ -62,7 +62,7 @@ public class ClasseDAO {
     public void save(Classe c) throws DatabaseException {
         String sql = "INSERT INTO classes (nom, filiere, niveau) VALUES (?, ?, ?)";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, c.getNom());
             ps.setString(2, c.getFiliere());
@@ -79,7 +79,7 @@ public class ClasseDAO {
     public void update(Classe c) throws DatabaseException {
         String sql = "UPDATE classes SET nom=?, filiere=?, niveau=? WHERE id=?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, c.getNom());
             ps.setString(2, c.getFiliere());
@@ -97,7 +97,7 @@ public class ClasseDAO {
     public void delete(int id) throws DatabaseException {
         String sql = "DELETE FROM classes WHERE id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();

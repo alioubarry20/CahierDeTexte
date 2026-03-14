@@ -28,7 +28,7 @@ public class UtilisateurDAO {
     public Utilisateur findByEmailAndPassword(String email, String motDePasse) throws DatabaseException {
         String sql = "SELECT * FROM utilisateurs WHERE email = ? AND mot_de_passe = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, email);
             ps.setString(2, motDePasse);
@@ -50,7 +50,7 @@ public class UtilisateurDAO {
         List<Utilisateur> liste = new ArrayList<>();
         String sql = "SELECT * FROM utilisateurs";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
 
@@ -69,7 +69,7 @@ public class UtilisateurDAO {
     public void save(Utilisateur u) throws DatabaseException {
         String sql = "INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role, statut, departement, specialite) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, u.getNom());
             ps.setString(2, u.getPrenom());
@@ -102,7 +102,7 @@ public class UtilisateurDAO {
     public void update(Utilisateur u) throws DatabaseException {
         String sql = "UPDATE utilisateurs SET nom=?, prenom=?, email=?, role=? WHERE id=?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, u.getNom());
             ps.setString(2, u.getPrenom());
@@ -121,7 +121,7 @@ public class UtilisateurDAO {
     public void delete(int id) throws DatabaseException {
         String sql = "DELETE FROM utilisateurs WHERE id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -136,7 +136,7 @@ public class UtilisateurDAO {
     public void validerCompte(int id) throws DatabaseException {
         String sql = "UPDATE utilisateurs SET statut = 'ACTIF' WHERE id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();

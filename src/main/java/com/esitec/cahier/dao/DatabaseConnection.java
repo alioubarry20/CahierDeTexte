@@ -1,52 +1,108 @@
 package com.esitec.cahier.dao;
 
 import com.esitec.cahier.config.AppConfig;
-import com.esitec.cahier.exception.DatabaseException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.Statement;
 
-/*
-by Aliou barry
-Cette classe DatabaseConnection est responsable de la gestion de la connexion à la base de données MySQL.
-Elle utilise le pattern Singleton pour garantir qu'une seule connexion est établie et partagée à
-travers l'application. Elle fournit une méthode pour obtenir la connexion et une méthode pour la fermer.
-update : 2024-06-17
-*/
 public class DatabaseConnection {
 
-    // Instance unique (pattern Singleton)
-    private static Connection instance = null;
+    private static DatabaseConnection instance;
+    private Connection connection;
 
-    // Constructeur privé — personne ne peut faire new DatabaseConnection()
-    private DatabaseConnection() {}
-
-    // Méthode pour obtenir la connexion
-    public static Connection getInstance() throws DatabaseException {
+    private DatabaseConnection() {
         try {
-            if (instance == null || instance.isClosed()) {
-                instance = DriverManager.getConnection(
-                    AppConfig.DB_URL,
-                    AppConfig.DB_USER,
-                    AppConfig.DB_PASSWORD
-                );
-                System.out.println("✅ Connexion BDD établie.");
-            }
-        } catch (SQLException e) {
-            throw new DatabaseException("❌ Impossible de se connecter : " + e.getMessage());
+            Connection tempConn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/?useSSL=false&serverTimezone=UTC",
+                AppConfig.DB_USER, AppConfig.DB_PASSWORD
+            );
+            Statement st = tempConn.createStatement();
+            st.executeUpdate("CREATE DATABASE IF NOT EXISTS cahier_de_texte " +
+                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            st.close();
+            tempConn.close();
+
+            connection = DriverManager.getConnection(
+                AppConfig.DB_URL + "?useSSL=false&serverTimezone=UTC",
+                AppConfig.DB_USER, AppConfig.DB_PASSWORD
+            );
+
+            initialiserTables();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur connexion BDD : " + e.getMessage());
+        }
+    }
+
+    private void initialiserTables() throws Exception {
+        Statement st = connection.createStatement();
+
+        st.executeUpdate(
+            "CREATE TABLE IF NOT EXISTS utilisateurs (" +
+            "id INT AUTO_INCREMENT PRIMARY KEY," +
+            "nom VARCHAR(100) NOT NULL," +
+            "prenom VARCHAR(100) NOT NULL," +
+            "email VARCHAR(150) UNIQUE NOT NULL," +
+            "mot_de_passe VARCHAR(255) NOT NULL," +
+            "role VARCHAR(50) NOT NULL," +
+            "statut VARCHAR(20) DEFAULT 'EN_ATTENTE'," +
+            "specialite VARCHAR(100)," +
+            "departement VARCHAR(100)," +
+            "classe_id INT)"
+        );
+
+        st.executeUpdate(
+            "CREATE TABLE IF NOT EXISTS classes (" +
+            "id INT AUTO_INCREMENT PRIMARY KEY," +
+            "nom VARCHAR(100) NOT NULL," +
+            "filiere VARCHAR(100)," +
+            "niveau VARCHAR(50))"
+        );
+
+        st.executeUpdate(
+            "CREATE TABLE IF NOT EXISTS cours (" +
+            "id INT AUTO_INCREMENT PRIMARY KEY," +
+            "intitule VARCHAR(200) NOT NULL," +
+            "volume_horaire INT DEFAULT 0," +
+            "enseignant_id INT," +
+            "classe_id INT," +
+            "FOREIGN KEY (enseignant_id) REFERENCES utilisateurs(id)," +
+            "FOREIGN KEY (classe_id) REFERENCES classes(id))"
+        );
+
+        st.executeUpdate(
+            "CREATE TABLE IF NOT EXISTS seances (" +
+            "id INT AUTO_INCREMENT PRIMARY KEY," +
+            "date DATE," +
+            "heure TIME," +
+            "duree INT," +
+            "contenu TEXT," +
+            "observations TEXT," +
+            "statut VARCHAR(20) DEFAULT 'EN_ATTENTE'," +
+            "commentaire_rejet TEXT," +
+            "cours_id INT," +
+            "FOREIGN KEY (cours_id) REFERENCES cours(id))"
+        );
+
+        st.executeUpdate(
+            "INSERT IGNORE INTO utilisateurs " +
+            "(nom, prenom, email, mot_de_passe, role, statut, departement) " +
+            "VALUES ('Admin', 'Super', 'admin@esitec.sn', 'admin123', " +
+            "'CHEF_DEPARTEMENT', 'ACTIF', 'Informatique')"
+        );
+
+        st.close();
+    }
+
+    public static DatabaseConnection getInstance() {
+        if (instance == null) {
+            instance = new DatabaseConnection();
         }
         return instance;
     }
 
-    // Fermer la connexion
-    public static void closeConnection() {
-        try {
-            if (instance != null && !instance.isClosed()) {
-                instance.close();
-                System.out.println("✅ Connexion BDD fermée.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    // Méthode statique pour compatibilité avec les DAOs existants
+    public static Connection getConnection() {
+        return getInstance().connection;
     }
 }

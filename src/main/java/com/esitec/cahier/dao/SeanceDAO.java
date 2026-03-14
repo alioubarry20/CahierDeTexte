@@ -26,7 +26,7 @@ public class SeanceDAO {
         List<Seance> liste = new ArrayList<>();
         String sql = "SELECT * FROM seances WHERE cours_id = ? ORDER BY date_seance DESC";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, coursId);
             ResultSet rs = ps.executeQuery();
@@ -49,7 +49,7 @@ public class SeanceDAO {
                      "JOIN cours c ON s.cours_id = c.id " +
                      "WHERE c.classe_id = ? AND s.statut = 'EN_ATTENTE'";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, classeId);
             ResultSet rs = ps.executeQuery();
@@ -70,7 +70,7 @@ public class SeanceDAO {
         String sql = "INSERT INTO seances (date_seance, heure, duree, contenu, " +
                      "observations, statut, cours_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setDate(1, Date.valueOf(s.getDate()));
             ps.setTime(2, Time.valueOf(s.getHeure()));
@@ -92,7 +92,7 @@ public class SeanceDAO {
         String sql = "UPDATE seances SET date_seance=?, heure=?, duree=?, " +
                      "contenu=?, observations=? WHERE id=? AND statut='EN_ATTENTE'";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setDate(1, Date.valueOf(s.getDate()));
             ps.setTime(2, Time.valueOf(s.getHeure()));
@@ -112,7 +112,7 @@ public class SeanceDAO {
     public void valider(int id) throws DatabaseException {
         String sql = "UPDATE seances SET statut='VALIDEE' WHERE id=?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();
@@ -127,7 +127,7 @@ public class SeanceDAO {
     public void rejeter(int id, String commentaire) throws DatabaseException {
         String sql = "UPDATE seances SET statut='REJETEE', commentaire_rejet=? WHERE id=?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, commentaire);
             ps.setInt(2, id);

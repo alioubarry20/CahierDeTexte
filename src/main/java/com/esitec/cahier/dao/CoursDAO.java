@@ -32,7 +32,7 @@ public class CoursDAO {
                      "JOIN classes cl ON c.classe_id = cl.id " +
                      "WHERE c.enseignant_id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, enseignantId);
             ResultSet rs = ps.executeQuery();
@@ -58,7 +58,7 @@ public class CoursDAO {
                      "JOIN classes cl ON c.classe_id = cl.id " +
                      "WHERE c.classe_id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, classeId);
             ResultSet rs = ps.executeQuery();
@@ -83,7 +83,7 @@ public class CoursDAO {
                      "JOIN utilisateurs u ON c.enseignant_id = u.id " +
                      "JOIN classes cl ON c.classe_id = cl.id";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
 
@@ -103,7 +103,7 @@ public class CoursDAO {
         String sql = "INSERT INTO cours (intitule, volume_horaire, enseignant_id, classe_id) " +
                      "VALUES (?, ?, ?, ?)";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, c.getIntitule());
             ps.setInt(2, c.getVolumeHoraire());
@@ -122,7 +122,7 @@ public class CoursDAO {
         String sql = "UPDATE cours SET intitule=?, volume_horaire=?, " +
                      "enseignant_id=?, classe_id=? WHERE id=?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, c.getIntitule());
             ps.setInt(2, c.getVolumeHoraire());
@@ -141,7 +141,7 @@ public class CoursDAO {
     public void delete(int id) throws DatabaseException {
         String sql = "DELETE FROM cours WHERE id = ?";
         try {
-            Connection con = DatabaseConnection.getInstance();
+            Connection con = DatabaseConnection.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
             ps.executeUpdate();
