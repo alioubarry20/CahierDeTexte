@@ -1,6 +1,7 @@
 package com.esitec.cahier.ui.enseignant;
 
 import com.esitec.cahier.model.Cours;
+import com.esitec.cahier.model.Enseignant;
 import com.esitec.cahier.model.Seance;
 import com.esitec.cahier.service.CoursService;
 import com.esitec.cahier.service.SeanceService;
@@ -8,6 +9,7 @@ import com.esitec.cahier.ui.BaseView;
 import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.util.List;
 
@@ -15,58 +17,57 @@ public class HistoriqueSeancesView extends BaseView {
 
     private JTable tableau;
     private DefaultTableModel modeleTableau;
-    private JComboBox<Cours> comboCours;
     private CoursService coursService = new CoursService();
     private SeanceService seanceService = new SeanceService();
 
     public HistoriqueSeancesView() {
-        super("Historique des seances");
+        super("Mes Seances");
     }
 
     public JPanel creerPanneau() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(240, 242, 248));
+        panel.setBackground(COULEUR_FOND);
 
-        // Filtre
-        JPanel filtre = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        filtre.setBackground(new Color(240, 242, 248));
-        filtre.add(new JLabel("Filtrer par cours :"));
-
-        comboCours = new JComboBox<>();
-        comboCours.setPreferredSize(new Dimension(250, 30));
-        comboCours.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-
-        try {
-            int id = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(id);
-            comboCours.addItem(null);
-            for (Cours c : cours) comboCours.addItem(c);
-        } catch (Exception e) {
-            afficherErreur("Erreur : " + e.getMessage());
-        }
-
-        JButton btnFiltrer = creerBouton("Filtrer", COULEUR_SECONDAIRE);
-        btnFiltrer.setPreferredSize(new Dimension(100, 30));
-        btnFiltrer.addActionListener(e -> chargerSeances());
-
-        filtre.add(comboCours);
-        filtre.add(btnFiltrer);
-        panel.add(filtre, BorderLayout.NORTH);
-
-        // Tableau
-        String[] colonnes = {"ID", "Date", "Heure", "Duree", "Cours", "Statut"};
+        String[] colonnes = {"Date", "Heure", "Duree", "Cours", "Contenu", "Statut", "Motif rejet"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
-        tableau = new JTable(modeleTableau);
+        tableau = new JTable(modeleTableau) {
+            // Colorier les lignes selon statut
+            public Component prepareRenderer(
+                    javax.swing.table.TableCellRenderer r, int row, int col) {
+                Component c = super.prepareRenderer(r, row, col);
+                String statut = (String) getValueAt(row, 5);
+                if ("REJETE".equals(statut)) {
+                    c.setBackground(new Color(255, 235, 235));
+                    c.setForeground(new Color(180, 0, 0));
+                } else if ("VALIDE".equals(statut)) {
+                    c.setBackground(new Color(235, 255, 240));
+                    c.setForeground(new Color(0, 140, 70));
+                } else {
+                    c.setBackground(Color.WHITE);
+                    c.setForeground(Color.BLACK);
+                }
+                return c;
+            }
+        };
         tableau.setRowHeight(30);
         tableau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tableau.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tableau.setGridColor(new Color(220, 220, 220));
+        tableau.getColumnModel().getColumn(4).setPreferredWidth(200);
+        tableau.getColumnModel().getColumn(6).setPreferredWidth(200);
 
         JScrollPane scroll = new JScrollPane(tableau);
-        scroll.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
         panel.add(scroll, BorderLayout.CENTER);
+
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        bas.setBackground(COULEUR_FOND);
+        JButton btnRefresh = creerBouton("Actualiser", COULEUR_PRIMAIRE);
+        btnRefresh.addActionListener(e -> chargerSeances());
+        bas.add(btnRefresh);
+        panel.add(bas, BorderLayout.SOUTH);
 
         chargerSeances();
         return panel;
@@ -75,17 +76,18 @@ public class HistoriqueSeancesView extends BaseView {
     private void chargerSeances() {
         try {
             modeleTableau.setRowCount(0);
-            int id = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(id);
-            Cours filtre = (Cours) comboCours.getSelectedItem();
-
+            Enseignant enseignant = (Enseignant) Session.getUtilisateurConnecte();
+            List<Cours> cours = coursService.listerParEnseignant(enseignant.getId());
             for (Cours c : cours) {
-                if (filtre != null && c.getId() != filtre.getId()) continue;
                 List<Seance> seances = seanceService.listerParCours(c.getId());
                 for (Seance s : seances) {
                     modeleTableau.addRow(new Object[]{
-                        s.getId(), s.getDate(), s.getHeure(),
-                        s.getDuree() + " min", c.getIntitule(), s.getStatut()
+                        s.getDate(), s.getHeure(),
+                        s.getDuree() + " min",
+                        c.getIntitule(),
+                        s.getContenu(),
+                        s.getStatut(),
+                        s.getCommentaireRejet() != null ? s.getCommentaireRejet() : ""
                     });
                 }
             }

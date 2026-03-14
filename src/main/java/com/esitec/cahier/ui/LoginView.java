@@ -99,16 +99,16 @@ public class LoginView extends JFrame {
         JPanel droite = new JPanel();
         droite.setBackground(new Color(0, 120, 215));
         droite.setLayout(new BoxLayout(droite, BoxLayout.Y_AXIS));
-        droite.setBorder(BorderFactory.createEmptyBorder(60, 40, 60, 40));
+        droite.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
         JLabel lblWelcome = new JLabel(
             "<html><center>Welcome to the<br>application</center></html>");
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblWelcome.setForeground(Color.WHITE);
         lblWelcome.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblSub = new JLabel("login to continue");
-        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblSub.setForeground(new Color(200, 230, 255));
         lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -118,7 +118,7 @@ public class LoginView extends JFrame {
         sep.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblBrand = new JLabel("SUP DE CO");
-        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblBrand.setForeground(new Color(176, 212, 255));
         lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -134,15 +134,15 @@ public class LoginView extends JFrame {
 
         droite.add(Box.createVerticalGlue());
         droite.add(lblWelcome);
-        droite.add(Box.createVerticalStrut(8));
+        droite.add(Box.createVerticalStrut(6));
         droite.add(lblSub);
-        droite.add(Box.createVerticalStrut(18));
+        droite.add(Box.createVerticalStrut(16));
         droite.add(sep);
-        droite.add(Box.createVerticalStrut(18));
+        droite.add(Box.createVerticalStrut(16));
         droite.add(lblBrand);
-        droite.add(Box.createVerticalStrut(5));
+        droite.add(Box.createVerticalStrut(4));
         droite.add(lblBrandSub);
-        droite.add(Box.createVerticalStrut(8));
+        droite.add(Box.createVerticalStrut(6));
         droite.add(lblCertif);
         droite.add(Box.createVerticalGlue());
 

@@ -16,38 +16,41 @@ public class ValidationComptesView extends BaseView {
 
     public ValidationComptesView() {
         super("Validation des comptes");
-        initialiserUI();
-        chargerComptes();
     }
 
-    private void initialiserUI() {
-        setLayout(new BorderLayout());
-        add(creerHeader("✅ Validation des comptes"), BorderLayout.NORTH);
+    public JPanel creerPanneau() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(240, 242, 248));
 
-        String[] colonnes = {"ID", "Nom", "Prénom", "Email", "Rôle"};
+        String[] colonnes = {"ID", "Nom", "Prenom", "Email", "Role"};
         modeleTableau = new DefaultTableModel(colonnes, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableau = new JTable(modeleTableau);
         tableau.setRowHeight(30);
-        tableau.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        tableau.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tableau.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableau.setGridColor(new Color(220, 220, 220));
 
         JScrollPane scroll = new JScrollPane(tableau);
-        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        add(scroll, BorderLayout.CENTER);
+        scroll.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        panel.add(scroll, BorderLayout.CENTER);
 
-        JPanel panneauBoutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        panneauBoutons.setBackground(COULEUR_FOND);
+        JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        boutons.setBackground(new Color(240, 242, 248));
 
-        JButton btnValider = creerBouton("✅ Valider", COULEUR_SUCCES);
-        JButton btnRefuser = creerBouton("❌ Refuser", COULEUR_DANGER);
+        JButton btnValider = creerBouton("Valider", COULEUR_SUCCES);
+        JButton btnRefuser = creerBouton("Refuser", COULEUR_DANGER);
 
         btnValider.addActionListener(e -> validerCompte());
         btnRefuser.addActionListener(e -> refuserCompte());
 
-        panneauBoutons.add(btnValider);
-        panneauBoutons.add(btnRefuser);
-        add(panneauBoutons, BorderLayout.SOUTH);
+        boutons.add(btnValider);
+        boutons.add(btnRefuser);
+        panel.add(boutons, BorderLayout.SOUTH);
+
+        chargerComptes();
+        return panel;
     }
 
     private void chargerComptes() {
@@ -64,20 +67,17 @@ public class ValidationComptesView extends BaseView {
                 afficherSucces("Aucun compte en attente !");
             }
         } catch (Exception e) {
-            afficherErreur("Erreur chargement : " + e.getMessage());
+            afficherErreur("Erreur : " + e.getMessage());
         }
     }
 
     private void validerCompte() {
         int ligne = tableau.getSelectedRow();
-        if (ligne == -1) {
-            afficherErreur("Sélectionnez un compte !");
-            return;
-        }
+        if (ligne == -1) { afficherErreur("Selectionnez un compte !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         try {
             service.validerCompte(id);
-            afficherSucces("Compte validé !");
+            afficherSucces("Compte valide !");
             chargerComptes();
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());
@@ -86,14 +86,11 @@ public class ValidationComptesView extends BaseView {
 
     private void refuserCompte() {
         int ligne = tableau.getSelectedRow();
-        if (ligne == -1) {
-            afficherErreur("Sélectionnez un compte !");
-            return;
-        }
+        if (ligne == -1) { afficherErreur("Selectionnez un compte !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         try {
             service.supprimer(id);
-            afficherSucces("Compte refusé et supprimé !");
+            afficherSucces("Compte refuse et supprime !");
             chargerComptes();
         } catch (Exception e) {
             afficherErreur("Erreur : " + e.getMessage());

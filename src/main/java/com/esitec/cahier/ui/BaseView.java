@@ -3,51 +3,43 @@ package com.esitec.cahier.ui;
 import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 public abstract class BaseView extends JFrame {
-
-    protected static final Color COULEUR_PRIMAIRE   = new Color(33, 97, 140);
-    protected static final Color COULEUR_SECONDAIRE = new Color(52, 152, 219);
-    protected static final Color COULEUR_FOND       = new Color(240, 242, 248);
-    protected static final Color COULEUR_TEXTE      = Color.WHITE;
-    protected static final Color COULEUR_SUCCES     = new Color(39, 174, 96);
-    protected static final Color COULEUR_DANGER     = new Color(192, 57, 43);
-
-    protected static final Font POLICE_TITRE  = new Font("Segoe UI", Font.BOLD, 20);
-    protected static final Font POLICE_NORMAL = new Font("Segoe UI", Font.PLAIN, 13);
-    protected static final Font POLICE_BOUTON = new Font("Segoe UI", Font.BOLD, 13);
 
     protected Color SIDEBAR_BG     = new Color(45, 45, 80);
     protected Color SIDEBAR_TOP    = new Color(35, 35, 65);
     protected Color SIDEBAR_ACTIVE = new Color(70, 70, 120);
 
-    protected JPanel sidebarItems;
+    protected static final Color COULEUR_FOND       = new Color(245, 247, 250);
+    protected static final Color COULEUR_PRIMAIRE   = new Color(0, 120, 215);
+    protected static final Color COULEUR_SECONDAIRE = new Color(0, 120, 215);
+    protected static final Color COULEUR_SUCCES     = new Color(0, 180, 120);
+    protected static final Color COULEUR_DANGER     = new Color(220, 50, 50);
+    protected static final Color COULEUR_TEXTE      = new Color(50, 50, 50);
+
     protected JPanel mainContent;
+    protected JPanel sidebarItems;
 
     public BaseView(String titre) {
         setTitle("ESITEC - " + titre);
+        setSize(1100, 680);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 650);
         setLocationRelativeTo(null);
-        setBackground(COULEUR_FOND);
+        setResizable(true);
     }
 
     protected void construireLayout(JPanel sidebar, JPanel contenu) {
-        mainContent = contenu; // ← référence sauvegardée
         JPanel root = new JPanel(new BorderLayout());
         root.add(sidebar, BorderLayout.WEST);
         root.add(contenu, BorderLayout.CENTER);
+        mainContent = contenu;
         add(root);
     }
 
-    // Changer le contenu principal sans ouvrir une nouvelle fenêtre
-    protected void changerContenu(String titrePage, JPanel nouveauContenu) {
+    protected void changerContenu(String titre, JPanel panel) {
         mainContent.removeAll();
-        mainContent.add(creerHeader(titrePage), BorderLayout.NORTH);
-        mainContent.add(nouveauContenu, BorderLayout.CENTER);
+        mainContent.add(creerHeader(titre), BorderLayout.NORTH);
+        mainContent.add(new JScrollPane(panel), BorderLayout.CENTER);
         mainContent.revalidate();
         mainContent.repaint();
     }
@@ -55,99 +47,121 @@ public abstract class BaseView extends JFrame {
     protected JPanel creerSidebar(String sousTitre, String[][] menuItems) {
         JPanel sidebar = new JPanel(new BorderLayout());
         sidebar.setBackground(SIDEBAR_BG);
-        sidebar.setPreferredSize(new Dimension(220, getHeight()));
+        sidebar.setPreferredSize(new Dimension(220, 0));
 
-        // Logo
-        JPanel logo = new JPanel();
-        logo.setBackground(SIDEBAR_TOP);
-        logo.setLayout(new BoxLayout(logo, BoxLayout.Y_AXIS));
-        logo.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
+        // ── TOP : titre ──────────────────────────────────
+        JPanel top = new JPanel();
+        top.setBackground(SIDEBAR_TOP);
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+        top.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        JLabel lblTitre = new JLabel("ESITEC");
-        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitre.setForeground(Color.WHITE);
+        JLabel lblNom = new JLabel("ESITEC");
+        lblNom.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblNom.setForeground(Color.WHITE);
+        lblNom.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblSub = new JLabel(sousTitre);
-        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblSub.setForeground(new Color(180, 180, 200));
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        lblSub.setForeground(new Color(180, 180, 220));
+        lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        logo.add(lblTitre);
-        logo.add(lblSub);
+        top.add(lblNom);
+        top.add(Box.createVerticalStrut(4));
+        top.add(lblSub);
 
-        // Menu items
+        sidebar.add(top, BorderLayout.NORTH);
+
+        // ── MENU ─────────────────────────────────────────
         sidebarItems = new JPanel();
         sidebarItems.setBackground(SIDEBAR_BG);
         sidebarItems.setLayout(new BoxLayout(sidebarItems, BoxLayout.Y_AXIS));
         sidebarItems.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        for (int i = 0; i < menuItems.length; i++) {
-            sidebarItems.add(creerMenuItem(menuItems[i][1], i == 0));
+        for (String[] item : menuItems) {
+            sidebarItems.add(creerMenuItem(item[1]));
         }
 
-        // Bottom
-        JPanel bottom = new JPanel();
-        bottom.setBackground(SIDEBAR_TOP);
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
-        bottom.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+        sidebar.add(sidebarItems, BorderLayout.CENTER);
 
-        String nomUser = Session.estConnecte()
-            ? Session.getUtilisateurConnecte().getNomComplet() : "";
+        // ── BAS : user + deconnexion ─────────────────────
+        JPanel bas = new JPanel();
+        bas.setBackground(SIDEBAR_TOP);
+        bas.setLayout(new BoxLayout(bas, BoxLayout.Y_AXIS));
+        bas.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
+
+        String nomUser = "";
+        if (Session.getUtilisateurConnecte() != null) {
+            nomUser = Session.getUtilisateurConnecte().getPrenom()
+                + " " + Session.getUtilisateurConnecte().getNom();
+        }
+
         JLabel lblUser = new JLabel(nomUser);
-        lblUser.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblUser.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblUser.setForeground(Color.WHITE);
+        lblUser.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblLogout = new JLabel("Deconnexion");
-        lblLogout.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblLogout.setForeground(new Color(255, 150, 150));
-        lblLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        lblLogout.addMouseListener(new java.awt.event.MouseAdapter() {
+        JLabel lblDeconnexion = new JLabel("Deconnexion");
+        lblDeconnexion.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblDeconnexion.setForeground(new Color(200, 100, 100));
+        lblDeconnexion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblDeconnexion.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblDeconnexion.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 deconnecter();
             }
         });
 
-        bottom.add(lblUser);
-        bottom.add(Box.createVerticalStrut(6));
-        bottom.add(lblLogout);
+        bas.add(lblUser);
+        bas.add(Box.createVerticalStrut(4));
+        bas.add(lblDeconnexion);
 
-        sidebar.add(logo, BorderLayout.NORTH);
-        sidebar.add(sidebarItems, BorderLayout.CENTER);
-        sidebar.add(bottom, BorderLayout.SOUTH);
+        sidebar.add(bas, BorderLayout.SOUTH);
 
         return sidebar;
     }
 
-    private JPanel creerMenuItem(String texte, boolean actif) {
-        JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 13));
-        item.setBackground(actif ? SIDEBAR_ACTIVE : SIDEBAR_BG);
+    private JPanel creerMenuItem(String texte) {
+        JPanel item = new JPanel(new BorderLayout());
+        item.setBackground(SIDEBAR_BG);
         item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         item.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        item.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 10));
 
-        JLabel lbl = new JLabel("  " + texte);
-        lbl.setFont(new Font("Segoe UI", actif ? Font.BOLD : Font.PLAIN, 13));
-        lbl.setForeground(actif ? Color.WHITE : new Color(190, 190, 210));
+        JLabel lbl = new JLabel(texte);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setForeground(new Color(200, 200, 230));
+        item.add(lbl, BorderLayout.CENTER);
 
-        item.add(lbl);
+        item.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                item.setBackground(SIDEBAR_ACTIVE);
+                lbl.setForeground(Color.WHITE);
+            }
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                item.setBackground(SIDEBAR_BG);
+                lbl.setForeground(new Color(200, 200, 230));
+            }
+        });
+
         return item;
     }
 
-    protected JPanel creerHeader(String titrePage) {
+    protected JPanel creerHeader(String titre) {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(Color.WHITE);
-        header.setPreferredSize(new Dimension(getWidth(), 70));
         header.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            BorderFactory.createEmptyBorder(0, 30, 0, 30)
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
+            BorderFactory.createEmptyBorder(16, 30, 16, 30)
         ));
 
-        JLabel lblTitre = new JLabel(titrePage);
-        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitre.setForeground(new Color(30, 30, 60));
+        JLabel lblTitre = new JLabel(titre);
+        lblTitre.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTitre.setForeground(COULEUR_TEXTE);
 
-        String date = LocalDate.now().format(
-            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH));
+        String date = new java.text.SimpleDateFormat("EEEE dd MMMM yyyy",
+            java.util.Locale.FRENCH).format(new java.util.Date());
         JLabel lblDate = new JLabel(date);
-        lblDate.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblDate.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblDate.setForeground(new Color(150, 150, 150));
 
         header.add(lblTitre, BorderLayout.WEST);
@@ -157,49 +171,42 @@ public abstract class BaseView extends JFrame {
     }
 
     protected JPanel creerCarteStats(String titre, String valeur, Color couleur) {
-        JPanel carte = new JPanel(new BorderLayout());
+        JPanel carte = new JPanel();
+        carte.setLayout(new BoxLayout(carte, BoxLayout.Y_AXIS));
         carte.setBackground(Color.WHITE);
-        carte.setPreferredSize(new Dimension(150, 95));
         carte.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 5, 0, 0, couleur),
-            BorderFactory.createEmptyBorder(14, 16, 14, 16)
+            BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+            BorderFactory.createEmptyBorder(20, 25, 20, 25)
         ));
+        carte.setPreferredSize(new Dimension(160, 100));
+
+        JLabel lblValeur = new JLabel(valeur);
+        lblValeur.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblValeur.setForeground(couleur);
+        lblValeur.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblTitre = new JLabel(titre);
         lblTitre.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblTitre.setForeground(new Color(136, 136, 136));
+        lblTitre.setForeground(new Color(130, 130, 130));
+        lblTitre.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblValeur = new JLabel(valeur);
-        lblValeur.setFont(new Font("Segoe UI", Font.BOLD, 30));
-        lblValeur.setForeground(couleur);
-
-        carte.add(lblTitre, BorderLayout.NORTH);
-        carte.add(lblValeur, BorderLayout.CENTER);
+        carte.add(lblValeur);
+        carte.add(Box.createVerticalStrut(5));
+        carte.add(lblTitre);
 
         return carte;
     }
 
     protected JButton creerBouton(String texte, Color couleur) {
         JButton btn = new JButton(texte);
-        btn.setFont(POLICE_BOUTON);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btn.setBackground(couleur);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(160, 38));
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
         return btn;
-    }
-
-    protected void deconnecter() {
-        int choix = JOptionPane.showConfirmDialog(this,
-            "Voulez-vous vraiment vous deconnecter ?",
-            "Deconnexion", JOptionPane.YES_NO_OPTION);
-        if (choix == JOptionPane.YES_OPTION) {
-            Session.deconnecter();
-            dispose();
-            new LoginView().setVisible(true);
-        }
     }
 
     protected void afficherSucces(String message) {
@@ -210,5 +217,11 @@ public abstract class BaseView extends JFrame {
     protected void afficherErreur(String message) {
         JOptionPane.showMessageDialog(this, message, "Erreur",
             JOptionPane.ERROR_MESSAGE);
+    }
+
+    protected void deconnecter() {
+        Session.clear();
+        new com.esitec.cahier.ui.LoginView().setVisible(true);
+        dispose();
     }
 }

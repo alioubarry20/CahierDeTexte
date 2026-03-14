@@ -1,19 +1,23 @@
 package com.esitec.cahier.ui.enseignant;
 
+import com.esitec.cahier.model.Cours;
+import com.esitec.cahier.model.Enseignant;
+import com.esitec.cahier.model.Seance;
 import com.esitec.cahier.service.CoursService;
 import com.esitec.cahier.service.SeanceService;
-import com.esitec.cahier.model.Cours;
-import com.esitec.cahier.model.Seance;
+import com.esitec.cahier.service.StatistiquesService;
 import com.esitec.cahier.ui.BaseView;
 import com.esitec.cahier.util.Session;
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EnseignantDashboard extends BaseView {
 
-    private CoursService coursService = new CoursService();
-    private SeanceService seanceService = new SeanceService();
+    private StatistiquesService statsService  = new StatistiquesService();
+    private CoursService        coursService  = new CoursService();
+    private SeanceService       seanceService = new SeanceService();
 
     public EnseignantDashboard() {
         super("Tableau de bord — Enseignant");
@@ -21,6 +25,7 @@ public class EnseignantDashboard extends BaseView {
         SIDEBAR_TOP    = new Color(15, 45, 75);
         SIDEBAR_ACTIVE = new Color(0, 120, 215);
         initialiserUI();
+        verifierSeancesRejetees();
     }
 
     private void initialiserUI() {
@@ -34,11 +39,50 @@ public class EnseignantDashboard extends BaseView {
 
         JPanel contenu = new JPanel(new BorderLayout());
         contenu.setBackground(COULEUR_FOND);
-        contenu.add(creerHeader("Mon Tableau de bord"), BorderLayout.NORTH);
+        contenu.add(creerHeader("Tableau de bord"), BorderLayout.NORTH);
         contenu.add(creerContenuAccueil(), BorderLayout.CENTER);
 
         construireLayout(sidebar, contenu);
         relierMenu();
+    }
+
+    private void verifierSeancesRejetees() {
+        try {
+            Enseignant enseignant = (Enseignant) Session.getUtilisateurConnecte();
+            List<Cours> cours = coursService.listerParEnseignant(enseignant.getId());
+
+            List<String> rejets = new ArrayList<>();
+            for (Cours c : cours) {
+                List<Seance> seances = seanceService.listerParCours(c.getId());
+                for (Seance s : seances) {
+                    if ("REJETE".equals(s.getStatut())
+                            && s.getCommentaireRejet() != null
+                            && !s.getCommentaireRejet().isEmpty()) {
+                        rejets.add("• " + c.getIntitule()
+                            + " (" + s.getDate() + ") : "
+                            + s.getCommentaireRejet());
+                    }
+                }
+            }
+
+            if (!rejets.isEmpty()) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("Vous avez ")
+                   .append(rejets.size())
+                   .append(" seance(s) rejetee(s) :\n\n");
+                for (String r : rejets) {
+                    msg.append(r).append("\n");
+                }
+                msg.append("\nConsultez 'Mes Seances' pour plus de details.");
+
+                JOptionPane.showMessageDialog(this,
+                    msg.toString(),
+                    "⚠ Seances rejetees",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        } catch (Exception e) {
+            // silencieux
+        }
     }
 
     private JPanel creerContenuAccueil() {
@@ -47,13 +91,15 @@ public class EnseignantDashboard extends BaseView {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
 
-        JLabel lblHello = new JLabel("Hello !");
-        lblHello.setFont(new Font("Segoe UI", Font.BOLD, 52));
+        Enseignant enseignant = (Enseignant) Session.getUtilisateurConnecte();
+
+        JLabel lblHello = new JLabel("Hello, " + enseignant.getPrenom() + " !");
+        lblHello.setFont(new Font("Segoe UI", Font.BOLD, 42));
         lblHello.setForeground(new Color(0, 120, 215));
         lblHello.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSub = new JLabel("Bienvenue dans votre espace enseignant");
-        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         lblSub.setForeground(new Color(136, 136, 136));
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -62,24 +108,21 @@ public class EnseignantDashboard extends BaseView {
         cards.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         try {
-            int enseignantId = Session.getUtilisateurConnecte().getId();
-            List<Cours> cours = coursService.listerParEnseignant(enseignantId);
+            List<Cours> cours = coursService.listerParEnseignant(enseignant.getId());
             int nbCours = cours.size();
-            int nbSeances = 0, nbValidees = 0, nbAttente = 0;
-
+            int nbSeances = 0, nbValidees = 0, nbRejets = 0;
             for (Cours c : cours) {
                 List<Seance> seances = seanceService.listerParCours(c.getId());
                 nbSeances += seances.size();
                 for (Seance s : seances) {
-                    if (s.getStatut().equals("VALIDEE"))    nbValidees++;
-                    if (s.getStatut().equals("EN_ATTENTE")) nbAttente++;
+                    if ("VALIDE".equals(s.getStatut()))   nbValidees++;
+                    if ("REJETE".equals(s.getStatut()))   nbRejets++;
                 }
             }
-
-            cards.add(creerCarteStats("Mes Cours",  String.valueOf(nbCours),   new Color(0, 120, 215)));
-            cards.add(creerCarteStats("Seances",    String.valueOf(nbSeances),  new Color(0, 180, 120)));
-            cards.add(creerCarteStats("En attente", String.valueOf(nbAttente),  new Color(255, 140, 0)));
-            cards.add(creerCarteStats("Validees",   String.valueOf(nbValidees), new Color(150, 50, 200)));
+            cards.add(creerCarteStats("Mes cours",      String.valueOf(nbCours),    new Color(0, 120, 215)));
+            cards.add(creerCarteStats("Mes seances",    String.valueOf(nbSeances),  new Color(0, 180, 120)));
+            cards.add(creerCarteStats("Validees",       String.valueOf(nbValidees), new Color(255, 140, 0)));
+            cards.add(creerCarteStats("Rejetees",       String.valueOf(nbRejets),   new Color(220, 50, 50)));
         } catch (Exception e) {
             cards.add(new JLabel("Erreur chargement stats"));
         }
@@ -98,7 +141,7 @@ public class EnseignantDashboard extends BaseView {
 
         if (items.length >= 1) items[0].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Mon Tableau de bord", creerContenuAccueil());
+                changerContenu("Tableau de bord", creerContenuAccueil());
             }
         });
         if (items.length >= 2) items[1].addMouseListener(new java.awt.event.MouseAdapter() {
@@ -108,12 +151,12 @@ public class EnseignantDashboard extends BaseView {
         });
         if (items.length >= 3) items[2].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Mes seances", new HistoriqueSeancesView().creerPanneau());
+                changerContenu("Mes Seances", new HistoriqueSeancesView().creerPanneau());
             }
         });
         if (items.length >= 4) items[3].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Mes cours", new MesCoursView().creerPanneau());
+                changerContenu("Mes Cours", new MesCoursView().creerPanneau());
             }
         });
     }

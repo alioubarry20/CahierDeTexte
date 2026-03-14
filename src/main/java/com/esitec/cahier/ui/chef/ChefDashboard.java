@@ -1,13 +1,17 @@
 package com.esitec.cahier.ui.chef;
 
+import com.esitec.cahier.model.Utilisateur;
 import com.esitec.cahier.service.StatistiquesService;
+import com.esitec.cahier.service.UtilisateurService;
 import com.esitec.cahier.ui.BaseView;
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class ChefDashboard extends BaseView {
 
     private StatistiquesService statsService = new StatistiquesService();
+    private UtilisateurService utilisateurService = new UtilisateurService();
 
     public ChefDashboard() {
         super("Tableau de bord — Chef de departement");
@@ -20,7 +24,7 @@ public class ChefDashboard extends BaseView {
     private void initialiserUI() {
         String[][] menu = {
             {"", "Accueil"},
-            {"", "Utilisateurs"},
+            {"", "Enseignants"},
             {"", "Classes"},
             {"", "Cours"},
             {"", "Statistiques"},
@@ -53,6 +57,7 @@ public class ChefDashboard extends BaseView {
         lblSub.setForeground(new Color(136, 136, 136));
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Cards stats
         JPanel cards = new JPanel(new FlowLayout(FlowLayout.LEFT, 18, 0));
         cards.setBackground(COULEUR_FOND);
         cards.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -77,27 +82,37 @@ public class ChefDashboard extends BaseView {
         panel.add(Box.createVerticalStrut(30));
         panel.add(cards);
 
+        // Notification comptes en attente
+        try {
+            List<Utilisateur> enAttente = utilisateurService.listerEnAttente();
+            if (!enAttente.isEmpty()) {
+                JLabel lblNotif = new JLabel(
+                    "  " + enAttente.size() + " compte(s) en attente de validation !");
+                lblNotif.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                lblNotif.setForeground(Color.WHITE);
+                lblNotif.setBackground(new Color(200, 50, 50));
+                lblNotif.setOpaque(true);
+                lblNotif.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+                lblNotif.setAlignmentX(Component.LEFT_ALIGNMENT);
+                lblNotif.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                lblNotif.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+                        changerContenu("Validation des comptes",
+                            new ValidationComptesView().creerPanneau());
+                    }
+                });
+                panel.add(Box.createVerticalStrut(25));
+                panel.add(lblNotif);
+            }
+        } catch (Exception e) {
+            // silencieux
+        }
+
         return panel;
     }
 
-    private JPanel creerPanneauUtilisateurs() {
-        return new GestionUtilisateursView().creerPanneau();
-    }
-
-    private JPanel creerPanneauClasses() {
-        return new GestionClassesView().creerPanneau();
-    }
-
-    private JPanel creerPanneauCours() {
-        return new GestionCoursView().creerPanneau();
-    }
-
-    private JPanel creerPanneauStats() {
-        return new StatistiquesView().creerPanneau();
-    }
-
-    private JPanel creerPanneauFiche() {
-        return new FicheSuiviView().creerPanneau();
+    private JPanel creerPanneauValidation() {
+        return new ValidationComptesView().creerPanneau();
     }
 
     private void relierMenu() {
@@ -110,27 +125,27 @@ public class ChefDashboard extends BaseView {
         });
         if (items.length >= 2) items[1].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Gestion des utilisateurs", creerPanneauUtilisateurs());
+                changerContenu("Gestion des utilisateurs", new GestionUtilisateursView().creerPanneau());
             }
         });
         if (items.length >= 3) items[2].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Gestion des classes", creerPanneauClasses());
+                changerContenu("Gestion des classes", new GestionClassesView().creerPanneau());
             }
         });
         if (items.length >= 4) items[3].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Gestion des cours", creerPanneauCours());
+                changerContenu("Gestion des cours", new GestionCoursView().creerPanneau());
             }
         });
         if (items.length >= 5) items[4].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Statistiques", creerPanneauStats());
+                changerContenu("Statistiques", new StatistiquesView().creerPanneau());
             }
         });
         if (items.length >= 6) items[5].addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                changerContenu("Fiche de suivi", creerPanneauFiche());
+                changerContenu("Fiche de suivi", new FicheSuiviView().creerPanneau());
             }
         });
     }
