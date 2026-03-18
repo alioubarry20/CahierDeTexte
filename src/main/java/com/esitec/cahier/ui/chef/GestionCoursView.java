@@ -18,9 +18,9 @@ public class GestionCoursView extends BaseView {
 
     private JTable tableau;
     private DefaultTableModel modeleTableau;
-    private CoursService coursService = new CoursService();
+    private CoursService       coursService       = new CoursService();
     private UtilisateurService utilisateurService = new UtilisateurService();
-    private ClasseService classeService = new ClasseService();
+    private ClasseService      classeService      = new ClasseService();
 
     public GestionCoursView() {
         super("Gestion des cours");
@@ -48,12 +48,15 @@ public class GestionCoursView extends BaseView {
         boutons.setBackground(new Color(240, 242, 248));
 
         JButton btnAjouter   = creerBouton("+ Ajouter",  COULEUR_SECONDAIRE);
+        JButton btnModifier  = creerBouton("Modifier",   new Color(255, 140, 0));
         JButton btnSupprimer = creerBouton("Supprimer",  COULEUR_DANGER);
 
-        btnAjouter.addActionListener(e -> ouvrirFormulaireAjout());
+        btnAjouter.addActionListener(e   -> ouvrirFormulaireAjout());
+        btnModifier.addActionListener(e  -> modifierCours());
         btnSupprimer.addActionListener(e -> supprimerCours());
 
         boutons.add(btnAjouter);
+        boutons.add(btnModifier);
         boutons.add(btnSupprimer);
         panel.add(boutons, BorderLayout.SOUTH);
 
@@ -70,8 +73,10 @@ public class GestionCoursView extends BaseView {
                     c.getId(),
                     c.getIntitule(),
                     c.getVolumeHoraire() + "h",
-                    c.getEnseignant().getNomComplet(),
-                    c.getClasse().getNom()
+                    c.getEnseignant() != null
+                        ? c.getEnseignant().getPrenom() + " " + c.getEnseignant().getNom()
+                        : "Non assigne",
+                    c.getClasse() != null ? c.getClasse().getNom() : "Non assignee"
                 });
             }
         } catch (Exception e) {
@@ -81,26 +86,37 @@ public class GestionCoursView extends BaseView {
 
     private void ouvrirFormulaireAjout() {
         try {
-            List<Utilisateur> tous = utilisateurService.listerTous();
-            List<Classe> classes   = classeService.listerTous();
+            List<Utilisateur> tous    = utilisateurService.listerTous();
+            List<Classe>      classes = classeService.listerTous();
 
             List<Utilisateur> enseignants = tous.stream()
                 .filter(u -> u.getRole().equals("ENSEIGNANT"))
                 .collect(Collectors.toList());
 
-            if (enseignants.isEmpty()) { afficherErreur("Aucun enseignant !"); return; }
-            if (classes.isEmpty())     { afficherErreur("Aucune classe !"); return; }
+            if (classes.isEmpty()) { afficherErreur("Aucune classe !"); return; }
 
             JTextField champIntitule = new JTextField();
             JTextField champVolume   = new JTextField();
-            JComboBox<Utilisateur> comboEns   = new JComboBox<>(enseignants.toArray(new Utilisateur[0]));
-            JComboBox<Classe>      comboClasse = new JComboBox<>(classes.toArray(new Classe[0]));
+
+            // Combo enseignant avec option "Aucun"
+            JComboBox<String>     comboEnsLabel = new JComboBox<>();
+            comboEnsLabel.addItem("-- Aucun (assigner plus tard) --");
+            for (Utilisateur u : enseignants) {
+                comboEnsLabel.addItem(u.getPrenom() + " " + u.getNom());
+            }
+
+            JComboBox<Classe> comboClasse = new JComboBox<>(
+                classes.toArray(new Classe[0]));
 
             JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
-            panel.add(new JLabel("Intitule :"));         panel.add(champIntitule);
-            panel.add(new JLabel("Volume horaire (h) :")); panel.add(champVolume);
-            panel.add(new JLabel("Enseignant :"));       panel.add(comboEns);
-            panel.add(new JLabel("Classe :"));           panel.add(comboClasse);
+            panel.add(new JLabel("Intitule :"));
+            panel.add(champIntitule);
+            panel.add(new JLabel("Volume horaire (h) :"));
+            panel.add(champVolume);
+            panel.add(new JLabel("Enseignant (optionnel) :"));
+            panel.add(comboEnsLabel);
+            panel.add(new JLabel("Classe :"));
+            panel.add(comboClasse);
 
             int result = JOptionPane.showConfirmDialog(this, panel,
                 "Ajouter un cours", JOptionPane.OK_CANCEL_OPTION);
@@ -109,10 +125,118 @@ public class GestionCoursView extends BaseView {
                 Cours c = new Cours();
                 c.setIntitule(champIntitule.getText().trim());
                 c.setVolumeHoraire(Integer.parseInt(champVolume.getText().trim()));
-                c.setEnseignant((Enseignant) comboEns.getSelectedItem());
                 c.setClasse((Classe) comboClasse.getSelectedItem());
+
+                // Enseignant optionnel
+                int idxEns = comboEnsLabel.getSelectedIndex();
+                if (idxEns > 0) {
+                    Utilisateur u = enseignants.get(idxEns - 1);
+                    c.setEnseignant((Enseignant) u);
+                } else {
+                    c.setEnseignant(null);
+                }
+
                 coursService.ajouter(c);
                 afficherSucces("Cours ajoute !");
+                chargerCours();
+            }
+        } catch (Exception e) {
+            afficherErreur("Erreur : " + e.getMessage());
+        }
+    }
+
+    private void modifierCours() {
+        int ligne = tableau.getSelectedRow();
+        if (ligne == -1) { afficherErreur("Selectionnez un cours !"); return; }
+        int id = (int) modeleTableau.getValueAt(ligne, 0);
+
+        try {
+            List<Utilisateur> tous    = utilisateurService.listerTous();
+            List<Classe>      classes = classeService.listerTous();
+
+            List<Utilisateur> enseignants = tous.stream()
+                .filter(u -> u.getRole().equals("ENSEIGNANT"))
+                .collect(Collectors.toList());
+
+            // Trouver le cours
+            Cours cours = null;
+            for (Cours c : coursService.listerTous()) {
+                if (c.getId() == id) { cours = c; break; }
+            }
+            if (cours == null) { afficherErreur("Cours introuvable !"); return; }
+
+            final Cours coursRef = cours;
+
+            JTextField champIntitule = new JTextField(cours.getIntitule());
+            JTextField champVolume   = new JTextField(
+                String.valueOf(cours.getVolumeHoraire()));
+
+            // Combo enseignant
+            JComboBox<String> comboEnsLabel = new JComboBox<>();
+            comboEnsLabel.addItem("-- Aucun --");
+            int selectedEns = 0;
+            for (int i = 0; i < enseignants.size(); i++) {
+                Utilisateur u = enseignants.get(i);
+                comboEnsLabel.addItem(u.getPrenom() + " " + u.getNom());
+                if (coursRef.getEnseignant() != null
+                        && coursRef.getEnseignant().getId() == u.getId()) {
+                    selectedEns = i + 1;
+                }
+            }
+            comboEnsLabel.setSelectedIndex(selectedEns);
+
+            // Combo classe
+            JComboBox<Classe> comboClasse = new JComboBox<>(
+                classes.toArray(new Classe[0]));
+            for (int i = 0; i < classes.size(); i++) {
+                if (coursRef.getClasse() != null
+                        && classes.get(i).getId() == coursRef.getClasse().getId()) {
+                    comboClasse.setSelectedIndex(i);
+                    break;
+                }
+            }
+
+            JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+            panel.add(new JLabel("Intitule :"));
+            panel.add(champIntitule);
+            panel.add(new JLabel("Volume horaire (h) :"));
+            panel.add(champVolume);
+            panel.add(new JLabel("Enseignant (optionnel) :"));
+            panel.add(comboEnsLabel);
+            panel.add(new JLabel("Classe :"));
+            panel.add(comboClasse);
+
+            int result = JOptionPane.showConfirmDialog(this, panel,
+                "Modifier le cours", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result == JOptionPane.OK_OPTION) {
+                cours.setIntitule(champIntitule.getText().trim());
+                cours.setVolumeHoraire(Integer.parseInt(champVolume.getText().trim()));
+                cours.setClasse((Classe) comboClasse.getSelectedItem());
+
+                int idxEns = comboEnsLabel.getSelectedIndex();
+                if (idxEns > 0) {
+                    Utilisateur u = enseignants.get(idxEns - 1);
+                    cours.setEnseignant((Enseignant) u);
+
+                    // Mail si nouvel enseignant assigné
+                    try {
+                        com.esitec.cahier.util.MailService.getInstance()
+                            .mailCoursAssigne(
+                                u.getEmail(),
+                                u.getPrenom() + " " + u.getNom(),
+                                cours.getIntitule(),
+                                cours.getClasse() != null
+                                    ? cours.getClasse().getNom() : "",
+                                cours.getVolumeHoraire()
+                            );
+                    } catch (Exception ex) { /* silencieux */ }
+                } else {
+                    cours.setEnseignant(null);
+                }
+
+                coursService.modifier(cours);
+                afficherSucces("Cours modifie !");
                 chargerCours();
             }
         } catch (Exception e) {
@@ -125,7 +249,8 @@ public class GestionCoursView extends BaseView {
         if (ligne == -1) { afficherErreur("Selectionnez un cours !"); return; }
         int id = (int) modeleTableau.getValueAt(ligne, 0);
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Supprimer ce cours ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+            "Supprimer ce cours ?", "Confirmation",
+            JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 coursService.supprimer(id);

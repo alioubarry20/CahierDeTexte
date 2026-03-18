@@ -31,7 +31,9 @@ public class SeanceService {
         if (s.getHeure() == null)
             throw new ValidationException("L'heure est obligatoire.");
         if (s.getDuree() <= 0)
-            throw new ValidationException("La duree doit etre superieure a 0.");
+    throw new ValidationException("La duree doit etre superieure a 0.");
+if (s.getDuree() > 480)
+    throw new ValidationException("La duree ne peut pas depasser 480 minutes (8h) !");
         if (s.getCours() == null)
             throw new ValidationException("Le cours est obligatoire.");
 

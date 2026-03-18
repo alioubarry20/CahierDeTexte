@@ -27,8 +27,8 @@ public class CoursService {
             throw new ValidationException("L'intitule du cours est obligatoire.");
         if (c.getVolumeHoraire() <= 0)
             throw new ValidationException("Le volume horaire doit etre superieur a 0.");
-        if (c.getEnseignant() == null)
-            throw new ValidationException("L'enseignant est obligatoire.");
+        //if (c.getEnseignant() == null)
+         //   throw new ValidationException("L'enseignant est obligatoire.");
         if (c.getClasse() == null)
             throw new ValidationException("La classe est obligatoire.");
 
